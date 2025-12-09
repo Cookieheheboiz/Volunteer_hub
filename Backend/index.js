@@ -4,8 +4,11 @@ const bcrypt = require("bcryptjs"); // Để mã hóa mật khẩu
 const jwt = require("jsonwebtoken"); // Để tạo token
 const { authMiddleware, checkRole } = require("./middleware/auth");
 const prisma = new PrismaClient();
+const { Parser } = require("json2csv");
+const cors = require("cors");
 const app = express();
-app.use(express.json()); // Cho phép server đọc JSON từ body
+app.use(cors());
+app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
@@ -58,6 +61,12 @@ app.post("/api/auth/login", async (req, res) => {
 
     if (!user) {
       return res.status(400).json({ error: "Email hoặc mật khẩu không đúng" });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        error: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.",
+      });
     }
 
     // So sánh mật khẩu
@@ -204,6 +213,20 @@ app.patch(
           approverId: adminId, // Ghi lại admin nào đã duyệt
         },
       });
+
+      const eventCreator = await prisma.event.findUnique({
+        where: { id },
+        select: { creatorId: true, title: true },
+      });
+
+      if (eventCreator) {
+        await createNotification(
+          eventCreator.creatorId,
+          "EVENT_APPROVED",
+          `Sự kiện "${eventCreator.title}" của bạn đã được duyệt!`,
+          `/events/${id}` // Link để click vào xem
+        );
+      }
 
       res.json(updatedEvent);
     } catch (error) {
@@ -374,6 +397,147 @@ app.post("/api/posts/:id/like", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Lỗi khi xử lý like" });
   }
 });
+
+// --- HÀM TIỆN ÍCH (HELPER) ---
+// Hàm này dùng nội bộ, không gọi qua API
+async function createNotification(recipientId, type, content, link = null) {
+  try {
+    await prisma.notification.create({
+      data: { recipientId, type, content, link },
+    });
+  } catch (error) {
+    console.error("Lỗi tạo thông báo:", error);
+  }
+}
+
+// --- API THÔNG BÁO ---
+
+// 10. Lấy danh sách thông báo của User đang đăng nhập
+app.get("/api/notifications", authMiddleware, async (req, res) => {
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: { recipientId: req.user.userId },
+      orderBy: { createdAt: "desc" }, // Mới nhất lên đầu
+    });
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi lấy thông báo" });
+  }
+});
+
+// 11. Đánh dấu đã đọc
+app.patch("/api/notifications/:id/read", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.notification.update({
+      where: { id },
+      data: { isRead: true },
+    });
+    res.json({ message: "Đã đọc" });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi cập nhật" });
+  }
+});
+
+// --- API QUẢN LÝ USER (ADMIN) ---
+
+// 12. Lấy danh sách User (có phân trang & lọc)
+app.get(
+  "/api/admin/users",
+  authMiddleware,
+  checkRole(["ADMIN"]),
+  async (req, res) => {
+    try {
+      const users = await prisma.user.findMany({
+        select: {
+          // Chỉ lấy các trường cần thiết, giấu password đi
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Lỗi lấy danh sách user" });
+    }
+  }
+);
+
+// 13. Khóa / Mở khóa tài khoản
+app.patch(
+  "/api/admin/users/:id/toggle-status",
+  authMiddleware,
+  checkRole(["ADMIN"]),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Tìm user để biết trạng thái hiện tại
+      const user = await prisma.user.findUnique({ where: { id } });
+      if (!user) return res.status(404).json({ error: "User không tồn tại" });
+
+      // Đảo ngược trạng thái (True -> False và ngược lại)
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { isActive: !user.isActive },
+        select: { id: true, email: true, isActive: true }, // Trả về kết quả
+      });
+
+      res.json({
+        message: updatedUser.isActive
+          ? "Đã mở khóa tài khoản"
+          : "Đã khóa tài khoản",
+        user: updatedUser,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Lỗi cập nhật trạng thái" });
+    }
+  }
+);
+
+// --- API EXPORT DỮ LIỆU ---
+
+// 14. Export danh sách sự kiện ra CSV
+app.get(
+  "/api/admin/export/events",
+  authMiddleware,
+  checkRole(["ADMIN"]),
+  async (req, res) => {
+    try {
+      // 1. Lấy dữ liệu từ DB
+      const events = await prisma.event.findMany({
+        include: { creator: { select: { name: true, email: true } } }, // Lấy thêm tên người tạo
+      });
+
+      // 2. Chuẩn bị dữ liệu cho CSV (Làm phẳng dữ liệu)
+      const eventData = events.map((event) => ({
+        ID: event.id,
+        Ten_Su_Kien: event.title,
+        Nguoi_Tao: event.creator.name,
+        Email_Nguoi_Tao: event.creator.email,
+        Ngay_Bat_Dau: event.startTime.toISOString(),
+        Trang_Thai: event.status,
+        Dia_Diem: event.location,
+      }));
+
+      // 3. Chuyển đổi JSON -> CSV
+      const json2csvParser = new Parser();
+      const csv = json2csvParser.parse(eventData);
+
+      // 4. Gửi file về cho Client download
+      res.header("Content-Type", "text/csv");
+      res.attachment("danh_sach_su_kien.csv"); // Tên file khi tải về
+      return res.send(csv);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Lỗi xuất dữ liệu" });
+    }
+  }
+);
 
 // Chạy server
 app.listen(PORT, () => {
