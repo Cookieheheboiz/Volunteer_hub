@@ -1,17 +1,32 @@
-"use client"
+"use client";
 
-import { TrendingUp, Users, Clock, CheckCircle, MessageSquare, ArrowRight, Flame } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import type { Event, Post, Notification, User } from "@/lib/types"
+import {
+  TrendingUp,
+  Users,
+  Clock,
+  CheckCircle,
+  MessageSquare,
+  ArrowRight,
+  Flame,
+  Calendar,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import type { Event, Post, Notification, User } from "@/lib/types";
 
 interface ManagerOverviewDashboardProps {
-  events: Event[]
-  posts: Post[]
-  notifications: Notification[]
-  currentUser: User
-  onViewDetails: (eventId: string) => void
+  events: Event[];
+  posts: Post[];
+  notifications: Notification[];
+  currentUser: User;
+  onViewDetails: (eventId: string) => void;
 }
 
 export function ManagerOverviewDashboard({
@@ -21,34 +36,51 @@ export function ManagerOverviewDashboard({
   currentUser,
   onViewDetails,
 }: ManagerOverviewDashboardProps) {
-  const myEvents = events.filter((e) => e.creator.id === currentUser.id)
-  const approvedEvents = myEvents.filter((e) => e.status === "APPROVED")
-  const pendingEvents = myEvents.filter((e) => e.status === "PENDING")
+  // ✅ THÊM KIỂM TRA NULL/UNDEFINED
+  const myEvents = events.filter(
+    (e) => e?.creator?.id && currentUser?.id && e.creator.id === currentUser.id
+  );
+  const approvedEvents = myEvents.filter((e) => e.status === "APPROVED");
+  const pendingEvents = myEvents.filter((e) => e.status === "PENDING");
 
   // Calculate total active volunteers (approved registrations)
   const totalActiveVolunteers = myEvents.reduce(
-    (sum, event) => sum + event.registrations.filter((r) => r.status === "APPROVED" || r.status === "ATTENDED").length,
-    0,
-  )
+    (sum, event) =>
+      sum +
+      (event.registrations?.filter(
+        (r) => r.status === "APPROVED" || r.status === "ATTENDED"
+      ).length || 0),
+    0
+  );
 
   // Calculate pending approvals (pending registrations across all events)
   const pendingApprovals = myEvents.reduce(
-    (sum, event) => sum + event.registrations.filter((r) => r.status === "PENDING").length,
-    0,
-  )
+    (sum, event) =>
+      sum +
+      (event.registrations?.filter((r) => r.status === "PENDING").length || 0),
+    0
+  );
 
   // Get trending/high engagement events (sorted by registrations + posts)
   const trendingEvents = approvedEvents
     .map((event) => {
-      const eventPosts = posts.filter((p) => p.eventId === event.id)
-      const totalComments = eventPosts.reduce((sum, p) => sum + p.comments.length, 0)
-      const totalLikes = eventPosts.reduce((sum, p) => sum + p.likedBy.length, 0)
-      const recentRegistrations = event.registrations.filter((r) => {
-        const regDate = new Date(r.registeredAt)
-        const today = new Date()
-        const diffDays = Math.floor((today.getTime() - regDate.getTime()) / (1000 * 60 * 60 * 24))
-        return diffDays <= 7
-      }).length
+      const eventPosts = posts.filter((p) => p.eventId === event.id);
+      const totalComments = eventPosts.reduce(
+        (sum, p) => sum + (p.comments?.length || 0),
+        0
+      );
+      const totalLikes = eventPosts.reduce(
+        (sum, p) => sum + (p.likedBy?.length || 0),
+        0
+      );
+      const recentRegistrations = (event.registrations || []).filter((r) => {
+        const regDate = new Date(r.registeredAt);
+        const today = new Date();
+        const diffDays = Math.floor(
+          (today.getTime() - regDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return diffDays <= 7;
+      }).length;
 
       return {
         ...event,
@@ -56,17 +88,24 @@ export function ManagerOverviewDashboard({
         commentsCount: totalComments,
         likesCount: totalLikes,
         recentRegistrations,
-        engagementScore: event.registrations.length * 3 + eventPosts.length * 2 + totalComments + totalLikes,
-      }
+        engagementScore:
+          (event.registrations?.length || 0) * 3 +
+          eventPosts.length * 2 +
+          totalComments +
+          totalLikes,
+      };
     })
     .sort((a, b) => b.engagementScore - a.engagementScore)
-    .slice(0, 4)
+    .slice(0, 4);
 
   // Get relevant updates (notifications for this user)
   const userNotifications = notifications
     .filter((n) => n.userId === currentUser.id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, 5);
 
   // Create activity items from events
   const recentActivity = [
@@ -82,11 +121,11 @@ export function ManagerOverviewDashboard({
       })),
     ...myEvents
       .filter((e) => {
-        const eventPosts = posts.filter((p) => p.eventId === e.id)
-        return eventPosts.length > 0
+        const eventPosts = posts.filter((p) => p.eventId === e.id);
+        return eventPosts.length > 0;
       })
       .map((event) => {
-        const eventPosts = posts.filter((p) => p.eventId === event.id)
+        const eventPosts = posts.filter((p) => p.eventId === event.id);
         return {
           id: `posts-${event.id}`,
           type: "posts" as const,
@@ -94,12 +133,16 @@ export function ManagerOverviewDashboard({
           eventTitle: event.title,
           message: `Event "${event.title}" has ${eventPosts.length} new posts.`,
           time: eventPosts[0]?.createdAt || new Date().toISOString(),
-        }
+        };
       }),
     ...myEvents
-      .filter((e) => e.registrations.some((r) => r.status === "PENDING"))
+      .filter((e) =>
+        (e.registrations || []).some((r) => r.status === "PENDING")
+      )
       .map((event) => {
-        const pendingCount = event.registrations.filter((r) => r.status === "PENDING").length
+        const pendingCount = (event.registrations || []).filter(
+          (r) => r.status === "PENDING"
+        ).length;
         return {
           id: `pending-${event.id}`,
           type: "pending" as const,
@@ -107,28 +150,30 @@ export function ManagerOverviewDashboard({
           eventTitle: event.title,
           message: `Event "${event.title}" has ${pendingCount} pending registration(s).`,
           time: new Date().toISOString(),
-        }
+        };
       }),
-  ].slice(0, 6)
+  ].slice(0, 6);
 
   const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    return `${diffDays}d ago`
-  }
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome back! Here's an overview of your events.</p>
+        <p className="text-muted-foreground mt-1">
+          Welcome back! Here's an overview of your events.
+        </p>
       </div>
 
       {/* Top Stats Row */}
@@ -137,7 +182,9 @@ export function ManagerOverviewDashboard({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Events Created</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Events Created
+                </p>
                 <p className="text-3xl font-bold">{myEvents.length}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -151,7 +198,9 @@ export function ManagerOverviewDashboard({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Active Volunteers</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Active Volunteers
+                </p>
                 <p className="text-3xl font-bold">{totalActiveVolunteers}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -165,7 +214,9 @@ export function ManagerOverviewDashboard({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Pending Approvals</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Pending Approvals
+                </p>
                 <p className="text-3xl font-bold">{pendingApprovals}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
@@ -185,13 +236,18 @@ export function ManagerOverviewDashboard({
                 <TrendingUp className="h-5 w-5 text-emerald-600" />
                 <CardTitle>Trending & High Engagement</CardTitle>
               </div>
-              <CardDescription>Events with the best metrics and volunteer activity</CardDescription>
+              <CardDescription>
+                Events with the best metrics and volunteer activity
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {trendingEvents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No approved events yet. Create and get your events approved to see trending data.</p>
+                  <p>
+                    No approved events yet. Create and get your events approved
+                    to see trending data.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -202,17 +258,26 @@ export function ManagerOverviewDashboard({
                       onClick={() => onViewDetails(event.id)}
                     >
                       <CardContent className="pt-4">
-                        <h4 className="font-semibold text-sm line-clamp-1 mb-2">{event.title}</h4>
+                        <h4 className="font-semibold text-sm line-clamp-1 mb-2">
+                          {event.title}
+                        </h4>
 
                         {/* Engagement badges */}
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {event.recentRegistrations > 0 && (
-                            <Badge variant="secondary" className="bg-orange-100 text-orange-700 text-xs">
-                              <Flame className="h-3 w-3 mr-1" />+{event.recentRegistrations} volunteers this week
+                            <Badge
+                              variant="secondary"
+                              className="bg-orange-100 text-orange-700 text-xs"
+                            >
+                              <Flame className="h-3 w-3 mr-1" />+
+                              {event.recentRegistrations} volunteers this week
                             </Badge>
                           )}
                           {event.commentsCount > 0 && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                            <Badge
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-700 text-xs"
+                            >
                               <MessageSquare className="h-3 w-3 mr-1" />
                               {event.commentsCount} comments
                             </Badge>
@@ -222,13 +287,25 @@ export function ManagerOverviewDashboard({
                         {/* Stats */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Volunteers</span>
-                            <span className="font-medium">{event.registrations.length}</span>
+                            <span className="text-muted-foreground">
+                              Volunteers
+                            </span>
+                            <span className="font-medium">
+                              {event.registrations?.length || 0}
+                            </span>
                           </div>
-                          <Progress value={Math.min(event.registrations.length * 10, 100)} className="h-1.5" />
+                          <Progress
+                            value={Math.min(
+                              (event.registrations?.length || 0) * 10,
+                              100
+                            )}
+                            className="h-1.5"
+                          />
 
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Engagement</span>
+                            <span className="text-muted-foreground">
+                              Engagement
+                            </span>
                             <span className="font-medium">
                               {event.postsCount} posts, {event.likesCount} likes
                             </span>
@@ -272,8 +349,8 @@ export function ManagerOverviewDashboard({
                           activity.type === "approved"
                             ? "bg-emerald-100"
                             : activity.type === "posts"
-                              ? "bg-blue-100"
-                              : "bg-amber-100"
+                            ? "bg-blue-100"
+                            : "bg-amber-100"
                         }`}
                       >
                         {activity.type === "approved" ? (
@@ -285,9 +362,13 @@ export function ManagerOverviewDashboard({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-2">{activity.message}</p>
+                        <p className="text-sm line-clamp-2">
+                          {activity.message}
+                        </p>
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-muted-foreground">{formatTimeAgo(activity.time)}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimeAgo(activity.time)}
+                          </span>
                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
                         </div>
                       </div>
@@ -300,7 +381,5 @@ export function ManagerOverviewDashboard({
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-import { Calendar } from "lucide-react"

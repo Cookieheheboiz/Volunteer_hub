@@ -51,9 +51,36 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatarUrl: user.avatarUrl,
+        status: user.isActive ? "ACTIVE" : "BANNED",
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Lỗi đăng nhập" });
+    console.error(error);
+    res.status(500).json({ error: "Đã xảy ra lỗi khi đăng nhập" });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User không tồn tại" });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      status: user.isActive ? "ACTIVE" : "BANNED",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi lấy thông tin user" });
   }
 };

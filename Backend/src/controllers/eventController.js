@@ -1,11 +1,30 @@
 const prisma = require("../config/prisma");
+
+// Lấy tất cả sự kiện đã được duyệt
 exports.getAllEvents = async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: { status: "APPROVED" },
       include: {
         creator: {
-          select: { name: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -25,7 +44,24 @@ exports.getEventById = async (req, res) => {
       where: { id, status: "APPROVED" },
       include: {
         creator: {
-          select: { name: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
         },
       },
     });
@@ -58,6 +94,29 @@ exports.createEvent = async (req, res) => {
         endTime: new Date(endTime),
         creatorId,
         status: "PENDING", // Chờ admin duyệt
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        // ✅ THÊM registrations để trả về array rỗng thay vì undefined
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -104,7 +163,17 @@ exports.registerEvent = async (req, res) => {
       data: {
         userId: volunteerId,
         eventId,
-        status: "REGISTERED",
+        status: "PENDING", // Chờ event manager duyệt
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
     });
 
