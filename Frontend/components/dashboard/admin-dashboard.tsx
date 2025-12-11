@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Check,
   X,
@@ -22,26 +22,49 @@ import {
   Mail,
   Phone,
   Activity,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import type { Event, User, Post } from "@/lib/types"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import type { Event, User, Post } from "@/lib/types";
 
 interface AdminDashboardProps {
-  events: Event[]
-  users: User[]
-  posts: Post[]
-  currentView: string
-  onApprove: (eventId: string) => void
-  onReject: (eventId: string) => void
-  onViewDetails: (eventId: string) => void
-  onToggleUserStatus: (userId: string) => void
+  events: Event[];
+  users: User[];
+  posts: Post[];
+  currentView: string;
+  onApprove: (eventId: string) => void;
+  onReject: (eventId: string) => void;
+  onViewDetails: (eventId: string) => void;
+  onToggleUserStatus: (userId: string) => void;
 }
 
 export function AdminDashboard({
@@ -54,118 +77,142 @@ export function AdminDashboard({
   onViewDetails,
   onToggleUserStatus,
 }: AdminDashboardProps) {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [userDetailOpen, setUserDetailOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userDetailOpen, setUserDetailOpen] = useState(false);
 
-  const pendingEvents = events.filter((e) => e.status === "PENDING")
-  const approvedEvents = events.filter((e) => e.status === "APPROVED")
-  const manageableUsers = users.filter((u) => u.role !== "ADMIN")
+  const pendingEvents = events.filter((e) => e?.status === "PENDING");
+  const approvedEvents = events.filter((e) => e?.status === "APPROVED");
+  const manageableUsers = users.filter((u) => u?.role !== "ADMIN");
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "ADMIN":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "EVENT_MANAGER":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       default:
-        return "bg-emerald-100 text-emerald-800"
+        return "bg-emerald-100 text-emerald-800";
     }
-  }
+  };
 
   const handleExportEvents = (format: "csv" | "json") => {
-    alert(`Downloading Events data in ${format.toUpperCase()} format...`)
-  }
+    alert(`Downloading Events data in ${format.toUpperCase()} format...`);
+  };
 
   const handleExportUsers = (format: "csv" | "json") => {
-    alert(`Downloading Users data in ${format.toUpperCase()} format...`)
-  }
+    alert(`Downloading Users data in ${format.toUpperCase()} format...`);
+  };
 
   const handleViewUserDetails = (user: User) => {
-    setSelectedUser(user)
-    setUserDetailOpen(true)
-  }
+    setSelectedUser(user);
+    setUserDetailOpen(true);
+  };
 
   // Mock data for user details
   const getUserStats = (user: User) => {
     if (user.role === "VOLUNTEER") {
-      const userRegistrations = events.flatMap((e) => e.registrations.filter((r) => r.user.id === user.id))
-      const attended = userRegistrations.filter((r) => r.status === "ATTENDED").length
+      const userRegistrations = events
+        .filter((e) => e?.registrations)
+        .flatMap(
+          (e) => e.registrations?.filter((r) => r?.user?.id === user.id) || []
+        );
+      const attended = userRegistrations.filter(
+        (r) => r?.status === "ATTENDED"
+      ).length;
       return {
         eventsAttended: attended,
-        totalHours: attended * 4, // Mock: 4 hours per event
+        totalHours: attended * 4,
         eventsRegistered: userRegistrations.length,
-      }
+      };
     } else if (user.role === "EVENT_MANAGER") {
-      const createdEvents = events.filter((e) => e.creator.id === user.id)
-      const approvedCreated = createdEvents.filter((e) => e.status === "APPROVED").length
+      const createdEvents = events.filter((e) => e?.creator?.id === user.id);
+      const approvedCreated = createdEvents.filter(
+        (e) => e?.status === "APPROVED"
+      ).length;
       return {
         eventsCreated: createdEvents.length,
         eventsApproved: approvedCreated,
-      }
+      };
     }
-    return {}
-  }
+    return {};
+  };
 
   // Mock recent activity for user
   const getUserRecentActivity = (user: User) => {
-    const activities: { action: string; date: string; icon: typeof Activity }[] = []
+    const activities: {
+      action: string;
+      date: string;
+      icon: typeof Activity;
+    }[] = [];
 
     // Check registrations
     events.forEach((event) => {
-      event.registrations.forEach((reg) => {
-        if (reg.user.id === user.id) {
+      event.registrations?.forEach((reg) => {
+        if (reg?.user?.id === user.id) {
           activities.push({
             action: `Registered for "${event.title}"`,
             date: reg.registeredAt,
             icon: CalendarCheck,
-          })
+          });
         }
-      })
-    })
+      });
+    });
 
     // Check posts
     posts.forEach((post) => {
-      if (post.author.id === user.id) {
-        const event = events.find((e) => e.id === post.eventId)
+      if (post?.author?.id === user.id) {
+        const event = events.find((e) => e.id === post.eventId);
         activities.push({
           action: `Posted in "${event?.title || "Unknown Event"}"`,
           date: post.createdAt,
           icon: MessageCircle,
-        })
+        });
       }
-    })
+    });
 
-    return activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
-  }
+    return activities
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  };
 
   // Calculate trending events (by registrations and posts)
   const getTrendingEvents = () => {
     return approvedEvents
       .map((event) => {
-        const recentRegistrations = event.registrations.filter((r) => {
-          const regDate = new Date(r.registeredAt)
-          const weekAgo = new Date()
-          weekAgo.setDate(weekAgo.getDate() - 7)
-          return regDate > weekAgo
-        }).length
-        const eventPosts = posts.filter((p) => p.eventId === event.id)
-        const totalComments = eventPosts.reduce((acc, p) => acc + p.comments.length, 0)
-        const totalLikes = eventPosts.reduce((acc, p) => acc + p.likes, 0)
+        const recentRegistrations = (event.registrations || []).filter((r) => {
+          const regDate = new Date(r.registeredAt);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return regDate > weekAgo;
+        }).length;
+        const eventPosts = posts.filter((p) => p?.eventId === event.id);
+        const totalComments = eventPosts.reduce(
+          (acc, p) => acc + (p?.comments?.length || 0),
+          0
+        );
+        const totalLikes = eventPosts.reduce(
+          (acc, p) => acc + (p?.likedBy?.length || 0),
+          0
+        );
         return {
           ...event,
           recentJoins: recentRegistrations,
           totalComments,
           totalLikes,
           engagement: recentRegistrations * 2 + totalComments + totalLikes,
-        }
+        };
       })
       .sort((a, b) => b.engagement - a.engagement)
-      .slice(0, 3)
-  }
+      .slice(0, 3);
+  };
 
   // Get recently approved events or events with new activity
   const getRelevantUpdates = () => {
-    const updates: { event: Event; type: "approved" | "new_post"; detail: string }[] = []
+    const updates: {
+      event: Event;
+      type: "approved" | "new_post";
+      detail: string;
+    }[] = [];
 
     // Recently approved events (mock: all approved events)
     approvedEvents.slice(0, 2).forEach((event) => {
@@ -173,29 +220,33 @@ export function AdminDashboard({
         event,
         type: "approved",
         detail: "Just Approved",
-      })
-    })
+      });
+    });
 
     // Events with recent posts
-    const eventsWithPosts = approvedEvents.filter((event) => posts.some((p) => p.eventId === event.id))
+    const eventsWithPosts = approvedEvents.filter((event) =>
+      posts.some((p) => p.eventId === event.id)
+    );
     eventsWithPosts.slice(0, 2).forEach((event) => {
-      const eventPosts = posts.filter((p) => p.eventId === event.id)
+      const eventPosts = posts.filter((p) => p.eventId === event.id);
       updates.push({
         event,
         type: "new_post",
-        detail: `${eventPosts.length} new post${eventPosts.length > 1 ? "s" : ""}`,
-      })
-    })
+        detail: `${eventPosts.length} new post${
+          eventPosts.length > 1 ? "s" : ""
+        }`,
+      });
+    });
 
-    return updates.slice(0, 4)
-  }
+    return updates.slice(0, 4);
+  };
 
   if (currentView === "overview") {
-    const totalUsers = users.length
-    const totalActiveEvents = approvedEvents.length
-    const pendingApprovalsCount = pendingEvents.length
-    const trendingEvents = getTrendingEvents()
-    const relevantUpdates = getRelevantUpdates()
+    const totalUsers = users.length;
+    const totalActiveEvents = approvedEvents.length;
+    const pendingApprovalsCount = pendingEvents.length;
+    const trendingEvents = getTrendingEvents();
+    const relevantUpdates = getRelevantUpdates();
 
     return (
       <div className="space-y-6">
@@ -236,7 +287,9 @@ export function AdminDashboard({
                   <Clock className="h-6 w-6 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending Approvals</p>
+                  <p className="text-sm text-muted-foreground">
+                    Pending Approvals
+                  </p>
                   <p className="text-2xl font-bold">{pendingApprovalsCount}</p>
                 </div>
               </div>
@@ -252,11 +305,15 @@ export function AdminDashboard({
                 <Activity className="h-5 w-5" />
                 Relevant Updates
               </CardTitle>
-              <CardDescription>Recently approved events and new activity</CardDescription>
+              <CardDescription>
+                Recently approved events and new activity
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {relevantUpdates.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No recent updates</p>
+                <p className="text-muted-foreground text-center py-4">
+                  No recent updates
+                </p>
               ) : (
                 <div className="space-y-3">
                   {relevantUpdates.map((update, index) => (
@@ -266,14 +323,20 @@ export function AdminDashboard({
                       onClick={() => onViewDetails(update.event.id)}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{update.event.title}</p>
+                        <p className="font-medium truncate">
+                          {update.event.title}
+                        </p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(update.event.startTime).toLocaleDateString()}
+                          {new Date(
+                            update.event.startTime
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                       <Badge
                         className={
-                          update.type === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"
+                          update.type === "approved"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-blue-100 text-blue-800"
                         }
                         variant="secondary"
                       >
@@ -293,11 +356,15 @@ export function AdminDashboard({
                 <TrendingUp className="h-5 w-5" />
                 Trending Events
               </CardTitle>
-              <CardDescription>High engagement and popular events</CardDescription>
+              <CardDescription>
+                High engagement and popular events
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {trendingEvents.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No trending events</p>
+                <p className="text-muted-foreground text-center py-4">
+                  No trending events
+                </p>
               ) : (
                 <div className="space-y-3">
                   {trendingEvents.map((event) => (
@@ -313,13 +380,17 @@ export function AdminDashboard({
                             {new Date(event.startTime).toLocaleDateString()}
                           </p>
                         </div>
-                        <Badge className="bg-orange-100 text-orange-800 shrink-0" variant="secondary">
+                        <Badge
+                          className="bg-orange-100 text-orange-800 shrink-0"
+                          variant="secondary"
+                        >
                           Hot
                         </Badge>
                       </div>
                       <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <UserPlus className="h-3 w-3" />+{event.recentJoins} joined
+                          <UserPlus className="h-3 w-3" />+{event.recentJoins}{" "}
+                          joined
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageCircle className="h-3 w-3" />
@@ -334,7 +405,7 @@ export function AdminDashboard({
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   if (currentView === "users") {
@@ -350,11 +421,17 @@ export function AdminDashboard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExportUsers("csv")} className="gap-2">
+              <DropdownMenuItem
+                onClick={() => handleExportUsers("csv")}
+                className="gap-2"
+              >
                 <FileSpreadsheet className="h-4 w-4" />
                 Export CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportUsers("json")} className="gap-2">
+              <DropdownMenuItem
+                onClick={() => handleExportUsers("json")}
+                className="gap-2"
+              >
                 <FileJson className="h-4 w-4" />
                 Export JSON
               </DropdownMenuItem>
@@ -380,22 +457,33 @@ export function AdminDashboard({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={user.avatarUrl || "/placeholder.svg"} />
+                          <AvatarImage
+                            src={user.avatarUrl || "/placeholder.svg"}
+                          />
                           <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{user.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {user.email}
+                    </TableCell>
                     <TableCell>
-                      <Badge className={getRoleBadgeColor(user.role)} variant="secondary">
+                      <Badge
+                        className={getRoleBadgeColor(user.role)}
+                        variant="secondary"
+                      >
                         {user.role.replace("_", " ")}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className={user.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                        className={
+                          user.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }
                       >
                         {user.status}
                       </Badge>
@@ -452,19 +540,30 @@ export function AdminDashboard({
                 {/* Header: Avatar, Name, Role, Status */}
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={selectedUser.avatarUrl || "/placeholder.svg"} />
-                    <AvatarFallback className="text-xl">{selectedUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage
+                      src={selectedUser.avatarUrl || "/placeholder.svg"}
+                    />
+                    <AvatarFallback className="text-xl">
+                      {selectedUser.name.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-xl font-semibold">{selectedUser.name}</h3>
+                    <h3 className="text-xl font-semibold">
+                      {selectedUser.name}
+                    </h3>
                     <div className="flex gap-2 mt-1">
-                      <Badge className={getRoleBadgeColor(selectedUser.role)} variant="secondary">
+                      <Badge
+                        className={getRoleBadgeColor(selectedUser.role)}
+                        variant="secondary"
+                      >
                         {selectedUser.role.replace("_", " ")}
                       </Badge>
                       <Badge
                         variant="secondary"
                         className={
-                          selectedUser.status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          selectedUser.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
                         }
                       >
                         {selectedUser.status}
@@ -500,26 +599,34 @@ export function AdminDashboard({
 
                 {/* Stats Section */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Statistics</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    Statistics
+                  </h4>
                   {selectedUser.role === "VOLUNTEER" ? (
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-2xl font-bold text-emerald-600">
                           {getUserStats(selectedUser).eventsAttended || 0}
                         </p>
-                        <p className="text-xs text-muted-foreground">Events Attended</p>
+                        <p className="text-xs text-muted-foreground">
+                          Events Attended
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-2xl font-bold text-blue-600">
                           {getUserStats(selectedUser).totalHours || 0}h
                         </p>
-                        <p className="text-xs text-muted-foreground">Total Hours</p>
+                        <p className="text-xs text-muted-foreground">
+                          Total Hours
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-2xl font-bold text-amber-600">
                           {getUserStats(selectedUser).eventsRegistered || 0}
                         </p>
-                        <p className="text-xs text-muted-foreground">Registered</p>
+                        <p className="text-xs text-muted-foreground">
+                          Registered
+                        </p>
                       </div>
                     </div>
                   ) : (
@@ -528,13 +635,17 @@ export function AdminDashboard({
                         <p className="text-2xl font-bold text-blue-600">
                           {getUserStats(selectedUser).eventsCreated || 0}
                         </p>
-                        <p className="text-xs text-muted-foreground">Events Created</p>
+                        <p className="text-xs text-muted-foreground">
+                          Events Created
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-muted/50 rounded-lg">
                         <p className="text-2xl font-bold text-emerald-600">
                           {getUserStats(selectedUser).eventsApproved || 0}
                         </p>
-                        <p className="text-xs text-muted-foreground">Events Approved</p>
+                        <p className="text-xs text-muted-foreground">
+                          Events Approved
+                        </p>
                       </div>
                     </div>
                   )}
@@ -544,22 +655,31 @@ export function AdminDashboard({
 
                 {/* Recent Activity */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Recent Activity</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    Recent Activity
+                  </h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {getUserRecentActivity(selectedUser).length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-2">No recent activity</p>
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        No recent activity
+                      </p>
                     ) : (
-                      getUserRecentActivity(selectedUser).map((activity, index) => (
-                        <div key={index} className="flex items-start gap-2 text-sm p-2 bg-muted/30 rounded">
-                          <activity.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate">{activity.action}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(activity.date).toLocaleDateString()}
-                            </p>
+                      getUserRecentActivity(selectedUser).map(
+                        (activity, index) => (
+                          <div
+                            key={index}
+                            className="flex items-start gap-2 text-sm p-2 bg-muted/30 rounded"
+                          >
+                            <activity.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate">{activity.action}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(activity.date).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      )
                     )}
                   </div>
                 </div>
@@ -568,7 +688,7 @@ export function AdminDashboard({
           </DialogContent>
         </Dialog>
       </div>
-    )
+    );
   }
 
   // Event Approval Queue (existing code)
@@ -584,11 +704,17 @@ export function AdminDashboard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleExportEvents("csv")} className="gap-2">
+            <DropdownMenuItem
+              onClick={() => handleExportEvents("csv")}
+              className="gap-2"
+            >
               <FileSpreadsheet className="h-4 w-4" />
               Export CSV
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExportEvents("json")} className="gap-2">
+            <DropdownMenuItem
+              onClick={() => handleExportEvents("json")}
+              className="gap-2"
+            >
               <FileJson className="h-4 w-4" />
               Export JSON
             </DropdownMenuItem>
@@ -610,11 +736,16 @@ export function AdminDashboard({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-lg">{event.title}</h3>
-                      <Badge className="bg-amber-100 text-amber-800" variant="secondary">
+                      <Badge
+                        className="bg-amber-100 text-amber-800"
+                        variant="secondary"
+                      >
                         PENDING
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{event.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {event.description}
+                    </p>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
@@ -627,7 +758,10 @@ export function AdminDashboard({
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <Button variant="outline" onClick={() => onViewDetails(event.id)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => onViewDetails(event.id)}
+                    >
                       View
                     </Button>
                     <Button
@@ -637,7 +771,10 @@ export function AdminDashboard({
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => onApprove(event.id)}>
+                    <Button
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => onApprove(event.id)}
+                    >
                       <Check className="h-4 w-4" />
                     </Button>
                   </div>
@@ -648,5 +785,5 @@ export function AdminDashboard({
         </div>
       )}
     </div>
-  )
+  );
 }
