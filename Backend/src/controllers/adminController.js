@@ -100,6 +100,31 @@ exports.approveEvent = async (req, res) => {
   }
 };
 
+// Từ chối sự kiện
+exports.rejectEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await prisma.event.findUnique({ where: { id } });
+    if (!event) {
+      return res.status(404).json({ error: "Sự kiện không tồn tại" });
+    }
+
+    const updatedEvent = await prisma.event.update({
+      where: { id },
+      data: { status: "REJECTED" },
+    });
+
+    res.json({
+      message: "Đã từ chối sự kiện",
+      event: updatedEvent,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi từ chối sự kiện" });
+  }
+};
+
 // Export danh sách sự kiện ra CSV
 exports.exportEvents = async (req, res) => {
   try {

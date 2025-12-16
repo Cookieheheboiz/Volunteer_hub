@@ -6,16 +6,17 @@ import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
 import { VolunteerDashboard } from "@/components/dashboard/volunteer-dashboard";
 import { EventDetail } from "@/components/events/event-detail";
-import { authApi, eventApi } from "@/lib/api";
-import type { User, Event, Notification } from "@/lib/types";
+import { authApi, eventApi, postApi } from "@/lib/api";
+import type { User, Event, Notification, Post } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { mockNotifications, mockPosts } from "@/lib/mock-data";
+import { mockNotifications } from "@/lib/mock-data";
 
 export default function VolunteerDashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState("discover");
@@ -40,6 +41,12 @@ export default function VolunteerDashboardPage() {
     checkAuth();
   }, [router]);
 
+  useEffect(() => {
+    if (selectedEventId) {
+      loadPosts(selectedEventId);
+    }
+  }, [selectedEventId]);
+
   const loadEvents = async () => {
     try {
       const data = await eventApi.getAllEvents();
@@ -48,6 +55,51 @@ export default function VolunteerDashboardPage() {
       console.error("Error loading events:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadPosts = async (eventId: string) => {
+    try {
+      const data = await postApi.getPostsByEvent(eventId);
+      setPosts(data);
+    } catch (error) {
+      console.error("Error loading posts:", error);
+    }
+  };
+
+  const handleCreatePost = async (content: string) => {
+    if (!selectedEventId) return;
+    try {
+      await postApi.createPost(selectedEventId, content);
+      await loadPosts(selectedEventId);
+      toast({
+        title: "Đã đăng bài",
+        description: "Bài viết của bạn đã được chia sẻ.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể đăng bài",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLikePost = async (postId: string) => {
+    try {
+      await postApi.toggleLike(postId);
+      if (selectedEventId) loadPosts(selectedEventId);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  const handleAddComment = async (postId: string, content: string) => {
+    try {
+      await postApi.addComment(postId, content);
+      if (selectedEventId) loadPosts(selectedEventId);
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -107,14 +159,14 @@ export default function VolunteerDashboardPage() {
         {selectedEvent ? (
           <EventDetail
             event={selectedEvent}
-            posts={mockPosts.filter((p) => p.eventId === selectedEvent.id)}
+            posts={posts}
             currentUser={currentUser}
             onBack={() => setSelectedEventId(null)}
             onJoin={handleJoin}
             onLeave={() => {}}
-            onCreatePost={() => {}}
-            onLikePost={() => {}}
-            onAddComment={() => {}}
+            onCreatePost={handleCreatePost}
+            onLikePost={handleLikePost}
+            onAddComment={handleAddComment}
             onEdit={() => {}}
             onDelete={() => {}}
             onApproveRegistration={() => {}}
