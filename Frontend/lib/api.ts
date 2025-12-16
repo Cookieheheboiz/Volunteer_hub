@@ -1,4 +1,4 @@
-import type { User, Role, Event } from "./types";
+import type { User, Role, Event, Post } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -134,6 +134,8 @@ export const authApi = {
   },
 
   getToken(): string | null {
+    // Thêm kiểm tra window để tránh lỗi khi render phía server (Next.js)
+    if (typeof window === "undefined") return null;
     return localStorage.getItem("authToken");
   },
 
@@ -150,7 +152,7 @@ export const authApi = {
     }
   },
 
-  // --- API Đổi mật khẩu mới thêm ---
+  // --- API Đổi mật khẩu ---
   async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
     try {
       return await fetchWithAuth(`${API_URL}/auth/change-password`, {
@@ -164,6 +166,41 @@ export const authApi = {
   },
 };
 
+// ============ ADMIN APIs ============
+export const adminApi = {
+  // Duyệt sự kiện
+  async approveEvent(eventId: string): Promise<Event> {
+    try {
+      const response = await fetchWithAuth(
+        `${API_URL}/admin/events/${eventId}/approve`,
+        {
+          method: "PATCH",
+        }
+      );
+      return response.event;
+    } catch (error) {
+      console.error("Error approving event:", error);
+      throw error;
+    }
+  },
+
+  // Từ chối sự kiện
+  async rejectEvent(eventId: string): Promise<Event> {
+    try {
+      const response = await fetchWithAuth(
+        `${API_URL}/admin/events/${eventId}/reject`,
+        {
+          method: "PATCH",
+        }
+      );
+      return response.event;
+    } catch (error) {
+      console.error("Error rejecting event:", error);
+      throw error;
+    }
+  },
+};
+
 // ============ EVENT APIs ============
 export const eventApi = {
   // Lấy tất cả events đã được approved
@@ -172,6 +209,16 @@ export const eventApi = {
       return await fetchWithAuth(`${API_URL}/events`);
     } catch (error) {
       console.error("Error fetching events:", error);
+      throw error;
+    }
+  },
+
+  // Lấy tất cả sự kiện cho Admin (bao gồm PENDING)
+  async getAdminEvents(): Promise<Event[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/admin/all`);
+    } catch (error) {
+      console.error("Error fetching admin events:", error);
       throw error;
     }
   },
@@ -224,6 +271,57 @@ export const eventApi = {
       });
     } catch (error) {
       console.error("Error registering for event:", error);
+      throw error;
+    }
+  },
+};
+
+// ============ POST APIs (MỚI THÊM) ============
+export const postApi = {
+  // Lấy bài viết của một sự kiện
+  async getPostsByEvent(eventId: string): Promise<any[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      throw error;
+    }
+  },
+
+  // Tạo bài viết mới trong sự kiện
+  async createPost(eventId: string, content: string, imageUrl?: string): Promise<any> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
+        method: "POST",
+        body: JSON.stringify({ content, imageUrl }),
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      throw error;
+    }
+  },
+
+  // Thêm bình luận
+  async addComment(postId: string, content: string): Promise<any> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/${postId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
+  },
+
+  // Toggle Like (Thả tim/Bỏ tim)
+  async toggleLike(postId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/${postId}/like`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Error toggling like:", error);
       throw error;
     }
   },

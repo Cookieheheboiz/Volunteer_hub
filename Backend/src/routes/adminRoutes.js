@@ -31,6 +31,14 @@ router.patch(
   adminController.approveEvent
 );
 
+// PATCH /api/admin/events/:id/reject - Từ chối sự kiện
+router.patch(
+  "/events/:id/reject",
+  authMiddleware,
+  checkRole(["ADMIN"]),
+  adminController.rejectEvent
+);
+
 // ============ EXPORT DỮ LIỆU ============
 
 // GET /api/admin/export/events - Export danh sách sự kiện ra CSV

@@ -24,12 +24,12 @@ exports.createPost = async (req, res) => {
       },
       include: {
         author: {
-          select: { name: true, email: true },
+          select: { id: true, name: true, email: true, avatarUrl: true },
         },
       },
     });
 
-    res.status(201).json(post);
+    res.status(201).json({ ...post, likedBy: [], comments: [] });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi tạo bài viết" });
@@ -45,28 +45,31 @@ exports.getPostsByEvent = async (req, res) => {
       where: { eventId },
       include: {
         author: {
-          select: { name: true, email: true },
+          select: { id: true, name: true, email: true, avatarUrl: true },
         },
         comments: {
           include: {
-            user: {
-              select: { name: true, email: true },
+            author: {
+              select: { id: true, name: true, email: true, avatarUrl: true },
             },
           },
           orderBy: { createdAt: "asc" },
         },
         likes: {
-          include: {
-            user: {
-              select: { name: true },
-            },
+          select: {
+            userId: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    res.json(posts);
+    const formattedPosts = posts.map((post) => ({
+      ...post,
+      likedBy: post.likes.map((like) => like.userId),
+    }));
+
+    res.json(formattedPosts);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi lấy bài viết" });
@@ -93,12 +96,12 @@ exports.addComment = async (req, res) => {
     const comment = await prisma.comment.create({
       data: {
         content,
-        userId,
+        authorId: userId,
         postId,
       },
       include: {
-        user: {
-          select: { name: true, email: true },
+        author: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
         },
       },
     });
@@ -126,7 +129,7 @@ exports.toggleLike = async (req, res) => {
     }
 
     // Kiểm tra đã like chưa
-    const existingLike = await prisma.like.findUnique({
+    const existingLike = await prisma.postLike.findUnique({
       where: {
         userId_postId: {
           userId,
@@ -137,7 +140,7 @@ exports.toggleLike = async (req, res) => {
 
     if (existingLike) {
       // Nếu đã like thì bỏ like
-      await prisma.like.delete({
+      await prisma.postLike.delete({
         where: {
           userId_postId: {
             userId,
@@ -149,7 +152,7 @@ exports.toggleLike = async (req, res) => {
       return res.json({ message: "Đã bỏ thích" });
     } else {
       // Nếu chưa like thì tạo like mới
-      const like = await prisma.like.create({
+      const like = await prisma.postLike.create({
         data: {
           userId,
           postId,
