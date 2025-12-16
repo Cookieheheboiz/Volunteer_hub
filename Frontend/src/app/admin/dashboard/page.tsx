@@ -33,6 +33,12 @@ export default function AdminDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    if (selectedEventId) {
+      loadPosts(selectedEventId);
+    }
+  }, [selectedEventId]);
+
+  useEffect(() => {
     const checkAuth = async () => {
       try {
         const user = await authApi.getMe();
@@ -51,16 +57,9 @@ export default function AdminDashboardPage() {
     checkAuth();
   }, [router]);
 
-  useEffect(() => {
-    if (selectedEventId) {
-      loadPosts(selectedEventId);
-    }
-  }, [selectedEventId]);
-
   const loadEvents = async () => {
     try {
-      // Admin cần lấy TẤT CẢ events (bao gồm PENDING)
-      const data = await adminApi.getAllEvents();
+      const data = await eventApi.getAdminEvents();
       setEvents(data);
     } catch (error) {
       console.error("Error loading events:", error);
