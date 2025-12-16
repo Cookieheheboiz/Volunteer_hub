@@ -149,6 +149,19 @@ export const authApi = {
       throw error;
     }
   },
+
+  // --- API Đổi mật khẩu mới thêm ---
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/auth/change-password`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  },
 };
 
 // ============ EVENT APIs ============

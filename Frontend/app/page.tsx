@@ -17,16 +17,20 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const token = authApi.getToken();
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const user = await authApi.getMe();
-        if (user) {
-          navigateByRole(user.role);
-        }
-      } catch (error) {
-        // Not logged in, stay on landing page
+        navigateByRole(user.role);
+      } catch {
         setIsLoading(false);
       }
     };
+
     checkAuth();
   }, []);
 

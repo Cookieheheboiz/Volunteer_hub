@@ -1,6 +1,7 @@
 "use client"
 
-import { Menu, LogOut, Heart } from "lucide-react"
+import { useState } from "react"
+import { Menu, LogOut, Heart, Lock } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { NotificationCenter } from "./notification-center"
+import { ChangePasswordModal } from "@/components/auth/change-password-modal"
 import type { User, Notification } from "@/lib/types"
 
 interface NavbarProps {
@@ -33,6 +35,7 @@ export function Navbar({
   onDeleteNotification,
   onMarkAllNotificationsRead,
 }: NavbarProps) {
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const userNotifications = notifications.filter((n) => n.userId === user.id)
 
   return (
@@ -73,6 +76,14 @@ export function Navbar({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              {/* --- Nút đổi mật khẩu mới thêm --- */}
+              <DropdownMenuItem onClick={() => setIsChangePasswordOpen(true)}>
+                <Lock className="mr-2 h-4 w-4" />
+                Change password
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
@@ -81,6 +92,12 @@ export function Navbar({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* --- Component Modal --- */}
+      <ChangePasswordModal 
+        isOpen={isChangePasswordOpen} 
+        onClose={() => setIsChangePasswordOpen(false)} 
+      />
     </header>
   )
 }
