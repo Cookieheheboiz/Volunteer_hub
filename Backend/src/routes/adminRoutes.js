@@ -64,7 +64,41 @@ router.get(
     "/export/events",
     authMiddleware,
     checkRole(["ADMIN"]),
-    adminController.exportEvents
+    adminController.rejectEvent
+);
+
+// ============ EXPORT DỮ LIỆU ============
+
+// GET /api/admin/export/events/csv - Export danh sách sự kiện ra CSV
+router.get(
+    "/export/events/csv",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportEventsCSV
+);
+
+// GET /api/admin/export/events/json - Export danh sách sự kiện ra JSON
+router.get(
+    "/export/events/json",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportEventsJSON
+);
+
+// GET /api/admin/export/users/csv - Export danh sách users ra CSV
+router.get(
+    "/export/users/csv",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportUsersCSV
+);
+
+// GET /api/admin/export/users/json - Export danh sách users ra JSON
+router.get(
+    "/export/users/json",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportUsersJSON
 );
 
 module.exports = router;

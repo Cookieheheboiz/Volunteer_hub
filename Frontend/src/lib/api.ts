@@ -273,23 +273,116 @@ export const adminApi = {
     }
   },
 
-  // Export events
-  async exportEvents(): Promise<Blob> {
+  // Export events to CSV
+  async exportEventsCSV(status?: string): Promise<Blob> {
     try {
       const token = authApi.getToken();
-      const response = await fetch(`${API_URL}/admin/export/events`, {
+      const queryParams = new URLSearchParams();
+      if (status) queryParams.append("status", status);
+      
+      const url = `${API_URL}/admin/export/events/csv${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+      
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to export events");
+        throw new Error("Failed to export events to CSV");
       }
 
       return await response.blob();
     } catch (error) {
-      console.error("Error exporting events:", error);
+      console.error("Error exporting events to CSV:", error);
+      throw error;
+    }
+  },
+
+  // Export events to JSON
+  async exportEventsJSON(status?: string): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (status) queryParams.append("status", status);
+      
+      const url = `${API_URL}/admin/export/events/json${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+      
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export events to JSON");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting events to JSON:", error);
+      throw error;
+    }
+  },
+
+  // Export users to CSV
+  async exportUsersCSV(params?: { role?: string; status?: string }): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (params?.role) queryParams.append("role", params.role);
+      if (params?.status) queryParams.append("status", params.status);
+      
+      const url = `${API_URL}/admin/export/users/csv${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+      
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export users to CSV");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting users to CSV:", error);
+      throw error;
+    }
+  },
+
+  // Export users to JSON
+  async exportUsersJSON(params?: { role?: string; status?: string }): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (params?.role) queryParams.append("role", params.role);
+      if (params?.status) queryParams.append("status", params.status);
+      
+      const url = `${API_URL}/admin/export/users/json${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+      
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export users to JSON");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting users to JSON:", error);
       throw error;
     }
   },
