@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { authMiddleware, checkRole } = require("../middleware/auth");
 
-// ============ THỐNG KÊ ============
+// ============ THỐNG KÊ (Mới từ main) ============
 
 // GET /api/admin/stats - Lấy thống kê tổng quan
 router.get(
@@ -15,12 +15,28 @@ router.get(
 
 // ============ QUẢN LÝ SỰ KIỆN ============
 
-// GET /api/admin/events - Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED)
+// GET /api/admin/events - Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED) - (Mới từ main)
 router.get(
     "/events",
     authMiddleware,
     checkRole(["ADMIN"]),
     adminController.getAllEvents
+);
+
+// PATCH /api/admin/events/:id/approve - Duyệt sự kiện
+router.patch(
+    "/events/:id/approve",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.approveEvent
+);
+
+// PATCH /api/admin/events/:id/reject - Từ chối sự kiện
+router.patch(
+    "/events/:id/reject",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.rejectEvent
 );
 
 // ============ QUẢN LÝ USER ============
@@ -39,24 +55,6 @@ router.patch(
     authMiddleware,
     checkRole(["ADMIN"]),
     adminController.toggleUserStatus
-);
-
-// ============ QUẢN LÝ SỰ KIỆN ============
-
-// PATCH /api/admin/events/:id/approve - Duyệt sự kiện
-router.patch(
-    "/events/:id/approve",
-    authMiddleware,
-    checkRole(["ADMIN"]),
-    adminController.approveEvent
-);
-
-// PATCH /api/admin/events/:id/reject - Từ chối sự kiện
-router.patch(
-    "/events/:id/reject",
-    authMiddleware,
-    checkRole(["ADMIN"]),
-    adminController.rejectEvent
 );
 
 // ============ EXPORT DỮ LIỆU ============
