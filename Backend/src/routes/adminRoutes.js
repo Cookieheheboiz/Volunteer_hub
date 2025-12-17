@@ -61,20 +61,44 @@ router.patch(
 
 // PATCH /api/admin/events/:id/reject - Từ chối sự kiện
 router.patch(
-  "/events/:id/reject",
-  authMiddleware,
-  checkRole(["ADMIN"]),
-  adminController.rejectEvent
+    "/events/:id/reject",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.rejectEvent
 );
 
 // ============ EXPORT DỮ LIỆU ============
 
-// GET /api/admin/export/events - Export danh sách sự kiện ra CSV
+// GET /api/admin/export/events/csv - Export danh sách sự kiện ra CSV
 router.get(
-    "/export/events",
+    "/export/events/csv",
     authMiddleware,
     checkRole(["ADMIN"]),
-    adminController.exportEvents
+    adminController.exportEventsCSV
+);
+
+// GET /api/admin/export/events/json - Export danh sách sự kiện ra JSON
+router.get(
+    "/export/events/json",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportEventsJSON
+);
+
+// GET /api/admin/export/users/csv - Export danh sách users ra CSV
+router.get(
+    "/export/users/csv",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportUsersCSV
+);
+
+// GET /api/admin/export/users/json - Export danh sách users ra JSON
+router.get(
+    "/export/users/json",
+    authMiddleware,
+    checkRole(["ADMIN"]),
+    adminController.exportUsersJSON
 );
 
 module.exports = router;

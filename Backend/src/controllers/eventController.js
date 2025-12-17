@@ -235,11 +235,7 @@ exports.registerEvent = async (req, res) => {
       data: {
         userId: volunteerId,
         eventId,
-<<<<<<< HEAD
-        status: "PENDING", // Chờ event manager duyệt
-=======
         status: "REGISTERED", // Mặc định là đã đăng ký
->>>>>>> ed166c13b4547a68f99bb0957717d9a78ed13e9f
       },
       include: {
         user: {

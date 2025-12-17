@@ -55,6 +55,7 @@ import {
 } from "@/src/components/ui/dialog";
 import { Separator } from "@/src/components/ui/separator";
 import type { Event, User, Post } from "@/src/lib/types";
+import { adminApi } from "@/src/lib/api";
 
 interface AdminDashboardProps {
   events: Event[];
@@ -103,12 +104,44 @@ export function AdminDashboard({
     }
   };
 
-  const handleExportEvents = (format: "csv" | "json") => {
-    alert(`Downloading Events data in ${format.toUpperCase()} format...`);
+  const handleExportEvents = async (format: "csv" | "json") => {
+    try {
+      const blob = format === "csv" 
+        ? await adminApi.exportEventsCSV() 
+        : await adminApi.exportEventsJSON();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `events_${Date.now()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export events. Please try again.');
+    }
   };
 
-  const handleExportUsers = (format: "csv" | "json") => {
-    alert(`Downloading Users data in ${format.toUpperCase()} format...`);
+  const handleExportUsers = async (format: "csv" | "json") => {
+    try {
+      const blob = format === "csv" 
+        ? await adminApi.exportUsersCSV() 
+        : await adminApi.exportUsersJSON();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users_${Date.now()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export users. Please try again.');
+    }
   };
 
   const handleViewUserDetails = (user: User) => {
