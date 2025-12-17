@@ -6,16 +6,17 @@ import { Navbar } from "@/src/components/layout/navbar";
 import { Sidebar } from "@/src/components/layout/sidebar";
 import { AdminDashboard } from "@/src/components/dashboard/admin-dashboard";
 import { EventDetail } from "@/src/components/events/event-detail";
-import { authApi, eventApi, adminApi } from "@/src/lib/api";
-import type { User, Event, Notification } from "@/src/lib/types";
+import { authApi, eventApi, postApi, adminApi } from "@/src/lib/api";
+import type { User, Event, Notification, Post } from "@/src/lib/types";
 import { useToast } from "@/src/hooks/use-toast";
-import { mockNotifications, mockPosts } from "@/src/lib/mock-data";
+import { mockNotifications, mockPosts, mockUsers } from "@/src/lib/mock-data";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -30,6 +31,12 @@ export default function AdminDashboardPage() {
   const [notifications, setNotifications] =
     useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedEventId) {
+      loadPosts(selectedEventId);
+    }
+  }, [selectedEventId]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -52,8 +59,7 @@ export default function AdminDashboardPage() {
 
   const loadEvents = async () => {
     try {
-      // Admin cần lấy TẤT CẢ events (bao gồm PENDING)
-      const data = await adminApi.getAllEvents();
+      const data = await eventApi.getAdminEvents();
       setEvents(data);
     } catch (error) {
       console.error("Error loading events:", error);
@@ -77,6 +83,53 @@ export default function AdminDashboardPage() {
       setStats(data);
     } catch (error) {
       console.error("Error loading stats:", error);
+    }
+  };
+
+  const loadPosts = async (eventId: string) => {
+    try {
+      const data = await postApi.getPostsByEvent(eventId);
+      setPosts(data);
+    } catch (error) {
+      console.error("Error loading posts:", error);
+    }
+  };
+
+
+
+  const handleCreatePost = async (content: string) => {
+    if (!selectedEventId) return;
+    try {
+      await postApi.createPost(selectedEventId, content);
+      await loadPosts(selectedEventId);
+      toast({
+        title: "Đã đăng bài",
+        description: "Bài viết của bạn đã được chia sẻ.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể đăng bài",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLikePost = async (postId: string) => {
+    try {
+      await postApi.toggleLike(postId);
+      if (selectedEventId) loadPosts(selectedEventId);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  const handleAddComment = async (postId: string, content: string) => {
+    try {
+      await postApi.addComment(postId, content);
+      if (selectedEventId) loadPosts(selectedEventId);
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -174,14 +227,14 @@ export default function AdminDashboardPage() {
         {selectedEvent ? (
           <EventDetail
             event={selectedEvent}
-            posts={mockPosts.filter((p) => p.eventId === selectedEvent.id)}
+            posts={posts.filter((p) => p.eventId === selectedEvent.id)}
             currentUser={currentUser}
             onBack={() => setSelectedEventId(null)}
             onJoin={() => {}}
             onLeave={() => {}}
-            onCreatePost={() => {}}
-            onLikePost={() => {}}
-            onAddComment={() => {}}
+            onCreatePost={handleCreatePost}
+            onLikePost={handleLikePost}
+            onAddComment={handleAddComment}
             onEdit={() => {}}
             onDelete={() => {}}
             onApproveRegistration={() => {}}
@@ -191,8 +244,8 @@ export default function AdminDashboardPage() {
         ) : (
           <AdminDashboard
             events={events}
-            users={users}
-            posts={mockPosts}
+            users={users} // TODO: Fetch real users
+            posts={posts}
             currentView={currentView}
             stats={stats}
             onApprove={handleApproveEvent}

@@ -251,9 +251,9 @@ export function AdminDashboard({
 
   if (currentView === "overview") {
     // Sử dụng stats từ API nếu có, không thì fallback về đếm từ data
-    const totalUsers = stats?.totalUsers ?? users.length;
-    const totalActiveEvents = stats?.approvedEvents ?? approvedEvents.length;
-    const pendingApprovalsCount = stats?.pendingEvents ?? pendingEvents.length;
+    const totalUsers = stats?.totalUsers || users.length;
+    const totalActiveEvents = stats?.approvedEvents || approvedEvents.length;
+    const pendingApprovalsCount = stats?.pendingEvents || pendingEvents.length;
     const trendingEvents = getTrendingEvents();
     const relevantUpdates = getRelevantUpdates();
 

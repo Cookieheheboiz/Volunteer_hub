@@ -84,6 +84,89 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
+// Lấy thống kê tổng quan cho admin dashboard
+exports.getStats = async (req, res) => {
+  try {
+    // Đếm tổng số users
+    const totalUsers = await prisma.user.count();
+
+    // Đếm số event đã được approve
+    const approvedEvents = await prisma.event.count({
+      where: { status: "APPROVED" },
+    });
+
+    // Đếm số event đang pending
+    const pendingEvents = await prisma.event.count({
+      where: { status: "PENDING" },
+    });
+
+    // Đếm theo role
+    const usersByRole = await prisma.user.groupBy({
+      by: ["role"],
+      _count: true,
+    });
+
+    // Đếm user active vs banned
+    const activeUsers = await prisma.user.count({
+      where: { isActive: true },
+    });
+
+    const bannedUsers = await prisma.user.count({
+      where: { isActive: false },
+    });
+
+    res.json({
+      totalUsers,
+      approvedEvents,
+      pendingEvents,
+      activeUsers,
+      bannedUsers,
+      usersByRole: usersByRole.reduce((acc, curr) => {
+        acc[curr.role] = curr._count;
+        return acc;
+      }, {}),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi lấy thống kê" });
+  }
+};
+
+// Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED)
+exports.getAllEvents = async (req, res) => {
+  try {
+    const events = await prisma.event.findMany({
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện" });
+  }
+};
+
 // Lấy danh sách user (có phân trang & lọc)
 exports.getUsers = async (req, res) => {
   try {
@@ -110,6 +193,7 @@ exports.getUsers = async (req, res) => {
         role: true,
         isActive: true,
         avatarUrl: true,
+        avatarUrl: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -123,7 +207,14 @@ exports.getUsers = async (req, res) => {
       status: user.isActive ? "ACTIVE" : "BANNED"
     }));
 
+    // Map isActive to status for frontend
+    const mappedUsers = users.map(user => ({
+      ...user,
+      status: user.isActive ? "ACTIVE" : "BANNED"
+    }));
+
     res.json({
+      users: mappedUsers,
       users: mappedUsers,
       pagination: {
         page: parseInt(page),
@@ -151,6 +242,14 @@ exports.toggleUserStatus = async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { isActive: !user.isActive },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        avatarUrl: true,
+      },
       select: {
         id: true,
         email: true,
@@ -198,6 +297,31 @@ exports.approveEvent = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi duyệt sự kiện" });
+  }
+};
+
+// Từ chối sự kiện
+exports.rejectEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await prisma.event.findUnique({ where: { id } });
+    if (!event) {
+      return res.status(404).json({ error: "Sự kiện không tồn tại" });
+    }
+
+    const updatedEvent = await prisma.event.update({
+      where: { id },
+      data: { status: "REJECTED" },
+    });
+
+    res.json({
+      message: "Đã từ chối sự kiện",
+      event: updatedEvent,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi từ chối sự kiện" });
   }
 };
 

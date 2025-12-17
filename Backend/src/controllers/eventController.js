@@ -36,6 +36,78 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
+// Lấy TẤT CẢ sự kiện (cho Admin)
+exports.getAllEventsForAdmin = async (req, res) => {
+  try {
+    const events = await prisma.event.findMany({
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện cho admin" });
+  }
+};
+
+// Lấy danh sách sự kiện của người tạo (EVENT_MANAGER)
+exports.getMyEvents = async (req, res) => {
+  try {
+    const creatorId = req.user.userId;
+    const events = await prisma.event.findMany({
+      where: { creatorId },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện của bạn" });
+  }
+};
+
 // Lấy chi tiết 1 sự kiện
 exports.getEventById = async (req, res) => {
   try {
@@ -163,7 +235,11 @@ exports.registerEvent = async (req, res) => {
       data: {
         userId: volunteerId,
         eventId,
+<<<<<<< HEAD
         status: "PENDING", // Chờ event manager duyệt
+=======
+        status: "REGISTERED", // Mặc định là đã đăng ký
+>>>>>>> ed166c13b4547a68f99bb0957717d9a78ed13e9f
       },
       include: {
         user: {

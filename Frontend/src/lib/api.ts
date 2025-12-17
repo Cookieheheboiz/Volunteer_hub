@@ -1,4 +1,4 @@
-import type { User, Role, Event } from "./types";
+import type { User, Role, Event, Post } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -151,71 +151,6 @@ export const authApi = {
   },
 };
 
-// ============ EVENT APIs ============
-export const eventApi = {
-  // Lấy tất cả events đã được approved
-  async getAllEvents(): Promise<Event[]> {
-    try {
-      return await fetchWithAuth(`${API_URL}/events`);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-      throw error;
-    }
-  },
-
-  async getMyEvents(): Promise<Event[]> {
-    try {
-      return await fetchWithAuth(`${API_URL}/events/my/events`);
-    } catch (error) {
-      console.error("Error fetching my events:", error);
-      throw error;
-    }
-  },
-
-  // Lấy chi tiết 1 event
-  async getEventById(eventId: string): Promise<Event> {
-    try {
-      return await fetchWithAuth(`${API_URL}/events/${eventId}`);
-    } catch (error) {
-      console.error("Error fetching event details:", error);
-      throw error;
-    }
-  },
-
-  // Tạo event mới (EVENT_MANAGER)
-  async createEvent(eventData: {
-    title: string;
-    description: string;
-    location: string;
-    startTime: string;
-    endTime: string;
-  }): Promise<Event> {
-    try {
-      return await fetchWithAuth(`${API_URL}/events`, {
-        method: "POST",
-        body: JSON.stringify(eventData),
-      });
-    } catch (error) {
-      console.error("Error creating event:", error);
-      throw error;
-    }
-  },
-
-  // Đăng ký tham gia event (VOLUNTEER)
-  async registerForEvent(
-    eventId: string
-  ): Promise<{ message: string; registration: any }> {
-    try {
-      return await fetchWithAuth(`${API_URL}/events/${eventId}/register`, {
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("Error registering for event:", error);
-      throw error;
-    }
-  },
-};
-
 // ============ ADMIN APIs ============
 export const adminApi = {
   // Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED)
@@ -345,3 +280,128 @@ export const adminApi = {
   },
 };
 
+// ============ EVENT APIs ============
+export const eventApi = {
+  // Lấy tất cả events đã được approved
+  async getAllEvents(): Promise<Event[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events`);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      throw error;
+    }
+  },
+
+  // Lấy tất cả sự kiện cho Admin (bao gồm PENDING)
+  async getAdminEvents(): Promise<Event[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/admin/all`);
+    } catch (error) {
+      console.error("Error fetching admin events:", error);
+      throw error;
+    }
+  },
+
+  async getMyEvents(): Promise<Event[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/my/events`);
+    } catch (error) {
+      console.error("Error fetching my events:", error);
+      throw error;
+    }
+  },
+
+  // Lấy chi tiết 1 event
+  async getEventById(eventId: string): Promise<Event> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/${eventId}`);
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+      throw error;
+    }
+  },
+
+  // Tạo event mới (EVENT_MANAGER)
+  async createEvent(eventData: {
+    title: string;
+    description: string;
+    location: string;
+    startTime: string;
+    endTime: string;
+  }): Promise<Event> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events`, {
+        method: "POST",
+        body: JSON.stringify(eventData),
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      throw error;
+    }
+  },
+
+  // Đăng ký tham gia event (VOLUNTEER)
+  async registerForEvent(
+    eventId: string
+  ): Promise<{ message: string; registration: any }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/${eventId}/register`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Error registering for event:", error);
+      throw error;
+    }
+  },
+};
+
+// ============ POST APIs ============
+export const postApi = {
+  // Tạo bài viết mới
+  async createPost(eventId: string, content: string): Promise<Post> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      throw error;
+    }
+  },
+
+  // Lấy danh sách bài viết của event
+  async getPostsByEvent(eventId: string): Promise<Post[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      throw error;
+    }
+  },
+
+  // Thêm bình luận
+  async addComment(postId: string, content: string): Promise<any> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/${postId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      throw error;
+    }
+  },
+
+  // Toggle like
+  async toggleLike(postId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/${postId}/like`, {
+        method: "POST",
+      });
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      throw error;
+    }
+  },
+};
