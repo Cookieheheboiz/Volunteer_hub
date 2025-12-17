@@ -134,6 +134,8 @@ export const authApi = {
   },
 
   getToken(): string | null {
+    // Thêm kiểm tra window để tránh lỗi khi render phía server (Next.js) - Logic của HEAD
+    if (typeof window === "undefined") return null;
     return localStorage.getItem("authToken");
   },
 
@@ -149,9 +151,22 @@ export const authApi = {
       throw error;
     }
   },
+
+  // --- API Đổi mật khẩu (Giữ lại từ HEAD) ---
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/auth/change-password`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  },
 };
 
-// ============ ADMIN APIs ============
+// ============ ADMIN APIs (Sử dụng version đầy đủ từ Main) ============
 export const adminApi = {
   // Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED)
   async getAllEvents(): Promise<Event[]> {
@@ -448,27 +463,27 @@ export const eventApi = {
   },
 };
 
-// ============ POST APIs ============
+// ============ POST APIs (GỘP CẢ HAI) ============
 export const postApi = {
-  // Tạo bài viết mới
-  async createPost(eventId: string, content: string): Promise<Post> {
-    try {
-      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
-        method: "POST",
-        body: JSON.stringify({ content }),
-      });
-    } catch (error) {
-      console.error("Error creating post:", error);
-      throw error;
-    }
-  },
-
-  // Lấy danh sách bài viết của event
+  // Lấy danh sách bài viết của event (Dùng kiểu Post[] của Main)
   async getPostsByEvent(eventId: string): Promise<Post[]> {
     try {
       return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      throw error;
+    }
+  },
+
+  // Tạo bài viết mới (Giữ tính năng upload ảnh imageUrl của HEAD, nhưng trả về kiểu Post)
+  async createPost(eventId: string, content: string, imageUrl?: string): Promise<Post> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
+        method: "POST",
+        body: JSON.stringify({ content, imageUrl }),
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
       throw error;
     }
   },

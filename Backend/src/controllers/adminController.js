@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const { Parser } = require("json2csv");
 
+// ============ PHẦN CỦA MAIN (Dashboard Stats) ============
 // Lấy thống kê tổng quan cho admin dashboard
 exports.getStats = async (req, res) => {
   try {
@@ -84,6 +85,7 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
+// ============ PHẦN GỘP (User List) ============
 // Lấy danh sách user (có phân trang & lọc)
 exports.getUsers = async (req, res) => {
   try {
@@ -109,7 +111,7 @@ exports.getUsers = async (req, res) => {
         name: true,
         role: true,
         isActive: true,
-        avatarUrl: true,
+        avatarUrl: true, // Giữ lại từ main để hiển thị avatar
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -117,10 +119,10 @@ exports.getUsers = async (req, res) => {
 
     const total = await prisma.user.count({ where });
 
-    // Map isActive to status for frontend
-    const mappedUsers = users.map(user => ({
+    // Map isActive to status for frontend (Giữ logic của main để frontend hiển thị đẹp hơn)
+    const mappedUsers = users.map((user) => ({
       ...user,
-      status: user.isActive ? "ACTIVE" : "BANNED"
+      status: user.isActive ? "ACTIVE" : "BANNED",
     }));
 
     res.json({
@@ -157,17 +159,17 @@ exports.toggleUserStatus = async (req, res) => {
         name: true,
         role: true,
         isActive: true,
-        avatarUrl: true,
+        avatarUrl: true, // Giữ lại
       },
     });
 
     res.json({
       message: updatedUser.isActive
-          ? "Đã mở khóa tài khoản"
-          : "Đã khóa tài khoản",
+        ? "Đã mở khóa tài khoản"
+        : "Đã khóa tài khoản",
       user: {
         ...updatedUser,
-        status: updatedUser.isActive ? "ACTIVE" : "BANNED"
+        status: updatedUser.isActive ? "ACTIVE" : "BANNED",
       },
     });
   } catch (error) {
