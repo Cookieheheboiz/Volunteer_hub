@@ -141,6 +141,23 @@ export default function ManagerDashboardPage() {
     }
   };
 
+  const handleMarkAttended = async (eventId: string, userId: string) => {
+    try {
+      await eventApi.markAttended(eventId, userId);
+      toast({
+        title: "Thành công",
+        description: "Đã xác nhận hoàn thành sự kiện cho tình nguyện viên.",
+      });
+      loadEvents();
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể xác nhận hoàn thành.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateEvent = async (eventData: any) => {
     try {
       if (editingEvent) {
@@ -240,7 +257,7 @@ export default function ManagerDashboardPage() {
             onDelete={handleDeleteEvent}
             onApproveRegistration={handleApproveRegistration}
             onRejectRegistration={handleRejectRegistration}
-            onMarkAttended={() => {}}
+            onMarkAttended={handleMarkAttended}
           />
         ) : currentView === "manager-overview" ? (
           <ManagerOverviewDashboard

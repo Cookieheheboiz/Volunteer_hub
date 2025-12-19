@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const { createNotification } = require("../utils/notificationHelper");
 
 exports.createPost = async (req, res) => {
   try {
@@ -86,6 +87,11 @@ exports.addComment = async (req, res) => {
     // Kiểm tra bài viết có tồn tại không
     const post = await prisma.post.findUnique({
       where: { id: postId },
+      include: {
+        author: {
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!post) {
@@ -106,6 +112,16 @@ exports.addComment = async (req, res) => {
       },
     });
 
+    // Tạo thông báo cho tác giả bài viết (nếu không phải chính mình comment)
+    if (post.authorId !== userId) {
+      await createNotification(
+        post.authorId,
+        "NEW_COMMENT",
+        `${comment.author.name} đã bình luận vào bài viết của bạn`,
+        `/post/${postId}`
+      );
+    }
+
     res.status(201).json(comment);
   } catch (error) {
     console.error(error);
@@ -122,6 +138,11 @@ exports.toggleLike = async (req, res) => {
     // Kiểm tra bài viết có tồn tại không
     const post = await prisma.post.findUnique({
       where: { id: postId },
+      include: {
+        author: {
+          select: { id: true, name: true },
+        },
+      },
     });
 
     if (!post) {
@@ -158,6 +179,22 @@ exports.toggleLike = async (req, res) => {
           postId,
         },
       });
+
+      // Lấy thông tin người like
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+
+      // Tạo thông báo cho tác giả bài viết (nếu không phải chính mình like)
+      if (post.authorId !== userId) {
+        await createNotification(
+          post.authorId,
+          "POST_LIKE",
+          `${user.name} đã thích bài viết của bạn`,
+          `/post/${postId}`
+        );
+      }
 
       return res.status(201).json({ message: "Đã thích", like });
     }
