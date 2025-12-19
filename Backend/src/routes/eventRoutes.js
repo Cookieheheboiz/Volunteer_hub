@@ -41,4 +41,28 @@ router.post(
   eventController.registerEvent
 );
 
+// DELETE /api/events/:id/register - Hủy đăng ký tham gia sự kiện
+router.delete(
+  "/:id/register",
+  authMiddleware,
+  checkRole(["VOLUNTEER"]),
+  eventController.cancelRegistration
+);
+
+// PATCH /api/events/:id/registrations/:userId/approve - Duyệt đăng ký
+router.patch(
+  "/:id/registrations/:userId/approve",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.approveRegistration
+);
+
+// PATCH /api/events/:id/registrations/:userId/reject - Từ chối đăng ký
+router.patch(
+  "/:id/registrations/:userId/reject",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.rejectRegistration
+);
+
 module.exports = router;

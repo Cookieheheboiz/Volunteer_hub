@@ -138,13 +138,14 @@ export default function AdminDashboardPage() {
       await adminApi.approveEvent(eventId);
       toast({
         title: "Thành công",
-        description: "Đã duyệt sự kiện.",
+        description: "Đã duyệt sự kiện",
       });
       loadEvents();
+      loadStats();
     } catch (error) {
       toast({
         title: "Lỗi",
-        description: "Không thể duyệt sự kiện.",
+        description: "Không thể duyệt sự kiện",
         variant: "destructive",
       });
     }
@@ -155,13 +156,14 @@ export default function AdminDashboardPage() {
       await adminApi.rejectEvent(eventId);
       toast({
         title: "Thành công",
-        description: "Đã từ chối sự kiện.",
+        description: "Đã từ chối sự kiện",
       });
       loadEvents();
+      loadStats();
     } catch (error) {
       toast({
         title: "Lỗi",
-        description: "Không thể từ chối sự kiện.",
+        description: "Không thể từ chối sự kiện",
         variant: "destructive",
       });
     }

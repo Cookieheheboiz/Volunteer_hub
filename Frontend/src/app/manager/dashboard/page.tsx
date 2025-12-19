@@ -107,6 +107,40 @@ export default function ManagerDashboardPage() {
     }
   };
 
+  const handleApproveRegistration = async (eventId: string, userId: string) => {
+    try {
+      await eventApi.approveRegistration(eventId, userId);
+      toast({
+        title: "Thành công",
+        description: "Đã duyệt đăng ký.",
+      });
+      loadEvents();
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể duyệt đăng ký.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectRegistration = async (eventId: string, userId: string) => {
+    try {
+      await eventApi.rejectRegistration(eventId, userId);
+      toast({
+        title: "Thành công",
+        description: "Đã từ chối đăng ký.",
+      });
+      loadEvents();
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể từ chối đăng ký.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateEvent = async (eventData: any) => {
     try {
       await eventApi.createEvent(eventData);
@@ -177,8 +211,8 @@ export default function ManagerDashboardPage() {
               setShowCreateModal(true);
             }}
             onDelete={() => {}}
-            onApproveRegistration={() => {}}
-            onRejectRegistration={() => {}}
+            onApproveRegistration={handleApproveRegistration}
+            onRejectRegistration={handleRejectRegistration}
             onMarkAttended={() => {}}
           />
         ) : currentView === "manager-overview" ? (

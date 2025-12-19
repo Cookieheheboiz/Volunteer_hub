@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const { Parser } = require("json2csv");
 
+// ============ PHẦN CỦA MAIN (Dashboard Stats) ============
 // Lấy thống kê tổng quan cho admin dashboard
 exports.getStats = async (req, res) => {
   try {
@@ -84,6 +85,7 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
+// ============ PHẦN GỘP (User List) ============
 // Lấy danh sách user (có phân trang & lọc)
 exports.getUsers = async (req, res) => {
   try {
@@ -109,7 +111,7 @@ exports.getUsers = async (req, res) => {
         name: true,
         role: true,
         isActive: true,
-        avatarUrl: true,
+        avatarUrl: true, // Giữ lại từ main để hiển thị avatar
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -117,10 +119,10 @@ exports.getUsers = async (req, res) => {
 
     const total = await prisma.user.count({ where });
 
-    // Map isActive to status for frontend
-    const mappedUsers = users.map(user => ({
+    // Map isActive to status for frontend (Giữ logic của main để frontend hiển thị đẹp hơn)
+    const mappedUsers = users.map((user) => ({
       ...user,
-      status: user.isActive ? "ACTIVE" : "BANNED"
+      status: user.isActive ? "ACTIVE" : "BANNED",
     }));
 
     res.json({
@@ -157,17 +159,17 @@ exports.toggleUserStatus = async (req, res) => {
         name: true,
         role: true,
         isActive: true,
-        avatarUrl: true,
+        avatarUrl: true, // Giữ lại
       },
     });
 
     res.json({
       message: updatedUser.isActive
-          ? "Đã mở khóa tài khoản"
-          : "Đã khóa tài khoản",
+        ? "Đã mở khóa tài khoản"
+        : "Đã khóa tài khoản",
       user: {
         ...updatedUser,
-        status: updatedUser.isActive ? "ACTIVE" : "BANNED"
+        status: updatedUser.isActive ? "ACTIVE" : "BANNED",
       },
     });
   } catch (error) {
@@ -226,35 +228,243 @@ exports.rejectEvent = async (req, res) => {
   }
 };
 
+// ============ EXPORT DỮ LIỆU ============
+
 // Export danh sách sự kiện ra CSV
-exports.exportEvents = async (req, res) => {
+exports.exportEventsCSV = async (req, res) => {
   try {
+    const { status } = req.query; // Filter by status if needed
+    
+    const where = {};
+    if (status) where.status = status;
+
     const events = await prisma.event.findMany({
+      where,
       include: {
         creator: {
           select: { name: true, email: true },
         },
+        registrations: {
+          select: { id: true },
+        },
       },
+      orderBy: { createdAt: "desc" },
     });
 
-    const fields = [
-      "id",
-      "title",
-      "location",
-      "status",
-      "creator.name",
-      "creator.email",
-      "startTime",
-      "endTime",
-    ];
-    const parser = new Parser({ fields });
-    const csv = parser.parse(events);
+    // Flatten data for CSV
+    const flattenedEvents = events.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      status: event.status,
+      creatorName: event.creator?.name || 'N/A',
+      creatorEmail: event.creator?.email || 'N/A',
+      startTime: event.startTime,
+      endTime: event.endTime,
+      maxParticipants: event.maxParticipants,
+      currentParticipants: event.registrations?.length || 0,
+      createdAt: event.createdAt,
+    }));
 
-    res.header("Content-Type", "text/csv");
-    res.attachment("danh_sach_su_kien.csv");
+    const fields = [
+      { label: 'ID', value: 'id' },
+      { label: 'Title', value: 'title' },
+      { label: 'Description', value: 'description' },
+      { label: 'Location', value: 'location' },
+      { label: 'Status', value: 'status' },
+      { label: 'Creator Name', value: 'creatorName' },
+      { label: 'Creator Email', value: 'creatorEmail' },
+      { label: 'Start Time', value: 'startTime' },
+      { label: 'End Time', value: 'endTime' },
+      { label: 'Max Participants', value: 'maxParticipants' },
+      { label: 'Current Participants', value: 'currentParticipants' },
+      { label: 'Created At', value: 'createdAt' },
+    ];
+
+    const parser = new Parser({ fields });
+    const csv = parser.parse(flattenedEvents);
+
+    res.header("Content-Type", "text/csv; charset=utf-8");
+    res.attachment(`events_${Date.now()}.csv`);
     res.send(csv);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Lỗi khi xuất dữ liệu" });
+    res.status(500).json({ error: "Lỗi khi xuất dữ liệu CSV" });
+  }
+};
+
+// Export danh sách sự kiện ra JSON
+exports.exportEventsJSON = async (req, res) => {
+  try {
+    const { status } = req.query; // Filter by status if needed
+    
+    const where = {};
+    if (status) where.status = status;
+
+    const events = await prisma.event.findMany({
+      where,
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.header("Content-Type", "application/json; charset=utf-8");
+    res.attachment(`events_${Date.now()}.json`);
+    res.json({
+      exportedAt: new Date().toISOString(),
+      totalEvents: events.length,
+      events: events,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi xuất dữ liệu JSON" });
+  }
+};
+
+// Export danh sách users ra CSV
+exports.exportUsersCSV = async (req, res) => {
+  try {
+    const { role, status } = req.query; // Filter by role and status if needed
+    
+    const where = {};
+    if (role) where.role = role;
+    if (status) {
+      where.isActive = status === 'ACTIVE';
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        avatarUrl: true,
+        createdAt: true,
+        _count: {
+          select: {
+            createdEvents: true,
+            registrations: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Flatten data for CSV
+    const flattenedUsers = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.isActive ? 'ACTIVE' : 'BANNED',
+      createdEvents: user._count?.createdEvents || 0,
+      registrations: user._count?.registrations || 0,
+      createdAt: user.createdAt,
+    }));
+
+    const fields = [
+      { label: 'ID', value: 'id' },
+      { label: 'Name', value: 'name' },
+      { label: 'Email', value: 'email' },
+      { label: 'Role', value: 'role' },
+      { label: 'Status', value: 'status' },
+      { label: 'Created Events', value: 'createdEvents' },
+      { label: 'Registrations', value: 'registrations' },
+      { label: 'Created At', value: 'createdAt' },
+    ];
+
+    const parser = new Parser({ fields });
+    const csv = parser.parse(flattenedUsers);
+
+    res.header("Content-Type", "text/csv; charset=utf-8");
+    res.attachment(`users_${Date.now()}.csv`);
+    res.send(csv);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi xuất dữ liệu users CSV" });
+  }
+};
+
+// Export danh sách users ra JSON
+exports.exportUsersJSON = async (req, res) => {
+  try {
+    const { role, status } = req.query; // Filter by role and status if needed
+    
+    const where = {};
+    if (role) where.role = role;
+    if (status) {
+      where.isActive = status === 'ACTIVE';
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        avatarUrl: true,
+        createdAt: true,
+        createdEvents: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+        registrations: {
+          select: {
+            id: true,
+            event: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Map isActive to status for consistency
+    const mappedUsers = users.map(user => ({
+      ...user,
+      status: user.isActive ? "ACTIVE" : "BANNED"
+    }));
+
+    res.header("Content-Type", "application/json; charset=utf-8");
+    res.attachment(`users_${Date.now()}.json`);
+    res.json({
+      exportedAt: new Date().toISOString(),
+      totalUsers: users.length,
+      users: mappedUsers,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi xuất dữ liệu users JSON" });
   }
 };

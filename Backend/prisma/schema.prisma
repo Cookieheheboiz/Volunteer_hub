@@ -23,7 +23,9 @@ enum EventStatus {
 }
 
 enum RegistrationStatus {
-  REGISTERED
+  PENDING
+  APPROVED
+  REJECTED
   ATTENDED
   CANCELLED
 }
@@ -77,7 +79,7 @@ model Event {
 
 model EventRegistration {
   id        String             @id @default(cuid())
-  status    RegistrationStatus @default(REGISTERED)
+  status    RegistrationStatus @default(PENDING)
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
   userId    String

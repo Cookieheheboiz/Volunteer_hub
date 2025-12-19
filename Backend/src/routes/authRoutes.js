@@ -7,4 +7,7 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.get("/me", authMiddleware, authController.getMe);
 
+// Thêm route đổi mật khẩu (cần đăng nhập mới đổi được)
+router.put('/change-password', authMiddleware, authController.changePassword);
+
 module.exports = router;

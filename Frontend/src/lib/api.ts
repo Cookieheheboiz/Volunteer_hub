@@ -43,7 +43,13 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   const contentType = response.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
-    throw new Error("Server không phản hồi đúng định dạng JSON");
+    const text = await response.text();
+    throw new Error(
+      `Server không phản hồi đúng định dạng JSON. Có thể do lỗi 404 hoặc 500. Nội dung: ${text.substring(
+        0,
+        100
+      )}`
+    );
   }
 
   const data = await response.json();
@@ -134,6 +140,8 @@ export const authApi = {
   },
 
   getToken(): string | null {
+    // Thêm kiểm tra window để tránh lỗi khi render phía server (Next.js) - Logic của HEAD
+    if (typeof window === "undefined") return null;
     return localStorage.getItem("authToken");
   },
 
@@ -149,9 +157,25 @@ export const authApi = {
       throw error;
     }
   },
+
+  // --- API Đổi mật khẩu (Giữ lại từ HEAD) ---
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/auth/change-password`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  },
 };
 
-// ============ ADMIN APIs ============
+// ============ ADMIN APIs (Sử dụng version đầy đủ từ Main) ============
 export const adminApi = {
   // Lấy tất cả events (bao gồm PENDING, APPROVED, REJECTED)
   async getAllEvents(): Promise<Event[]> {
@@ -221,9 +245,12 @@ export const adminApi = {
     userId: string
   ): Promise<{ message: string; user: User }> {
     try {
-      return await fetchWithAuth(`${API_URL}/admin/users/${userId}/toggle-status`, {
-        method: "PATCH",
-      });
+      return await fetchWithAuth(
+        `${API_URL}/admin/users/${userId}/toggle-status`,
+        {
+          method: "PATCH",
+        }
+      );
     } catch (error) {
       console.error("Error toggling user status:", error);
       throw error;
@@ -258,23 +285,122 @@ export const adminApi = {
     }
   },
 
-  // Export events
-  async exportEvents(): Promise<Blob> {
+  // Export events to CSV
+  async exportEventsCSV(status?: string): Promise<Blob> {
     try {
       const token = authApi.getToken();
-      const response = await fetch(`${API_URL}/admin/export/events`, {
+      const queryParams = new URLSearchParams();
+      if (status) queryParams.append("status", status);
+
+      const url = `${API_URL}/admin/export/events/csv${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+
+      const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to export events");
+        throw new Error("Failed to export events to CSV");
       }
 
       return await response.blob();
     } catch (error) {
-      console.error("Error exporting events:", error);
+      console.error("Error exporting events to CSV:", error);
+      throw error;
+    }
+  },
+
+  // Export events to JSON
+  async exportEventsJSON(status?: string): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (status) queryParams.append("status", status);
+
+      const url = `${API_URL}/admin/export/events/json${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export events to JSON");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting events to JSON:", error);
+      throw error;
+    }
+  },
+
+  // Export users to CSV
+  async exportUsersCSV(params?: {
+    role?: string;
+    status?: string;
+  }): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (params?.role) queryParams.append("role", params.role);
+      if (params?.status) queryParams.append("status", params.status);
+
+      const url = `${API_URL}/admin/export/users/csv${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export users to CSV");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting users to CSV:", error);
+      throw error;
+    }
+  },
+
+  // Export users to JSON
+  async exportUsersJSON(params?: {
+    role?: string;
+    status?: string;
+  }): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = new URLSearchParams();
+      if (params?.role) queryParams.append("role", params.role);
+      if (params?.status) queryParams.append("status", params.status);
+
+      const url = `${API_URL}/admin/export/users/json${
+        queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export users to JSON");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting users to JSON:", error);
       throw error;
     }
   },
@@ -353,29 +479,75 @@ export const eventApi = {
       throw error;
     }
   },
-};
 
-// ============ POST APIs ============
-export const postApi = {
-  // Tạo bài viết mới
-  async createPost(eventId: string, content: string): Promise<Post> {
+  // Hủy đăng ký tham gia event (VOLUNTEER)
+  async cancelRegistration(eventId: string): Promise<{ message: string }> {
     try {
-      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
-        method: "POST",
-        body: JSON.stringify({ content }),
+      return await fetchWithAuth(`${API_URL}/events/${eventId}/register`, {
+        method: "DELETE",
       });
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error("Error cancelling registration:", error);
       throw error;
     }
   },
 
-  // Lấy danh sách bài viết của event
+  // Duyệt đăng ký (EVENT_MANAGER)
+  async approveRegistration(eventId: string, userId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(
+        `${API_URL}/events/${eventId}/registrations/${userId}/approve`,
+        {
+          method: "PATCH",
+        }
+      );
+    } catch (error) {
+      console.error("Error approving registration:", error);
+      throw error;
+    }
+  },
+
+  // Từ chối đăng ký (EVENT_MANAGER)
+  async rejectRegistration(eventId: string, userId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(
+        `${API_URL}/events/${eventId}/registrations/${userId}/reject`,
+        {
+          method: "PATCH",
+        }
+      );
+    } catch (error) {
+      console.error("Error rejecting registration:", error);
+      throw error;
+    }
+  },
+};
+
+// ============ POST APIs (GỘP CẢ HAI) ============
+export const postApi = {
+  // Lấy danh sách bài viết của event (Dùng kiểu Post[] của Main)
   async getPostsByEvent(eventId: string): Promise<Post[]> {
     try {
       return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`);
     } catch (error) {
       console.error("Error fetching posts:", error);
+      throw error;
+    }
+  },
+
+  // Tạo bài viết mới (Giữ tính năng upload ảnh imageUrl của HEAD, nhưng trả về kiểu Post)
+  async createPost(
+    eventId: string,
+    content: string,
+    imageUrl?: string
+  ): Promise<Post> {
+    try {
+      return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
+        method: "POST",
+        body: JSON.stringify({ content, imageUrl }),
+      });
+    } catch (error) {
+      console.error("Error creating post:", error);
       throw error;
     }
   },

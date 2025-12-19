@@ -120,6 +120,23 @@ export default function VolunteerDashboardPage() {
     }
   };
 
+  const handleLeave = async (eventId: string) => {
+    try {
+      await eventApi.cancelRegistration(eventId);
+      await loadEvents();
+      toast({
+        title: "Đã hủy đăng ký",
+        description: "Bạn đã hủy đăng ký tham gia sự kiện.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể hủy đăng ký",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLogout = () => {
     authApi.removeToken();
     router.push("/");
@@ -163,7 +180,7 @@ export default function VolunteerDashboardPage() {
             currentUser={currentUser}
             onBack={() => setSelectedEventId(null)}
             onJoin={handleJoin}
-            onLeave={() => {}}
+            onLeave={handleLeave}
             onCreatePost={handleCreatePost}
             onLikePost={handleLikePost}
             onAddComment={handleAddComment}

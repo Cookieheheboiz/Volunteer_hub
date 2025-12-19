@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -20,15 +20,37 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Filter,
-} from "lucide-react"
-import { Button } from "@/src/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/src/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Badge } from "@/src/components/ui/badge"
-import { Textarea } from "@/src/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table"
+} from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
+import { Badge } from "@/src/components/ui/badge";
+import { Textarea } from "@/src/components/ui/textarea";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/src/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,24 +61,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/src/components/ui/alert-dialog"
-import type { Event, Post, User } from "@/src/lib/types"
+} from "@/src/components/ui/alert-dialog";
+import type { Event, Post, User } from "@/src/lib/types";
 
 interface EventDetailProps {
-  event: Event
-  posts: Post[]
-  currentUser: User
-  onBack: () => void
-  onJoin: (eventId: string) => void
-  onLeave: (eventId: string) => void
-  onCreatePost: (content: string) => void
-  onLikePost: (postId: string) => void
-  onAddComment: (postId: string, content: string) => void
-  onEdit?: (event: Event) => void
-  onDelete?: (eventId: string) => void
-  onApproveRegistration?: (eventId: string, userId: string) => void
-  onRejectRegistration?: (eventId: string, userId: string) => void
-  onMarkAttended?: (eventId: string, userId: string) => void
+  event: Event;
+  posts: Post[];
+  currentUser: User;
+  onBack: () => void;
+  onJoin: (eventId: string) => void;
+  onLeave: (eventId: string) => void;
+  onCreatePost: (content: string) => void;
+  onLikePost: (postId: string) => void;
+  onAddComment: (postId: string, content: string) => void;
+  onEdit?: (event: Event) => void;
+  onDelete?: (eventId: string) => void;
+  onApproveRegistration?: (eventId: string, userId: string) => void;
+  onRejectRegistration?: (eventId: string, userId: string) => void;
+  onMarkAttended?: (eventId: string, userId: string) => void;
 }
 
 export function EventDetail({
@@ -75,58 +97,73 @@ export function EventDetail({
   onRejectRegistration,
   onMarkAttended,
 }: EventDetailProps) {
-  const [newPost, setNewPost] = useState("")
-  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
-  const [reportFilter, setReportFilter] = useState<"ALL" | "ATTENDED" | "APPROVED" | "PENDING">("ALL")
+  const [newPost, setNewPost] = useState("");
+  const [expandedComments, setExpandedComments] = useState<
+    Record<string, boolean>
+  >({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
+    {}
+  );
+  const [reportFilter, setReportFilter] = useState<
+    "ALL" | "ATTENDED" | "APPROVED" | "PENDING"
+  >("ALL");
 
-  const isOwner = event.creator.id === currentUser.id
-  const isEventManager = currentUser.role === "EVENT_MANAGER"
-  const isEventPast = new Date(event.startTime) < new Date()
+  const isOwner = event.creator.id === currentUser.id;
+  const isEventManager = currentUser.role === "EVENT_MANAGER";
+  const isEventPast = new Date(event.startTime) < new Date();
+  const isEventEnded = new Date(event.endTime) < new Date();
 
   // Check current user's registration status
-  const userRegistration = event.registrations.find((r) => r.user.id === currentUser.id)
-  const registrationStatus = userRegistration?.status
+  const userRegistration = event.registrations.find(
+    (r) => r.user.id === currentUser.id
+  );
+  const registrationStatus = userRegistration?.status;
 
-  const pendingRegistrations = event.registrations.filter((r) => r.status === "PENDING")
-  const confirmedRegistrations = event.registrations.filter((r) => r.status === "APPROVED" || r.status === "ATTENDED")
+  const pendingRegistrations = event.registrations.filter(
+    (r) => r.status === "PENDING"
+  );
+  const confirmedRegistrations = event.registrations.filter(
+    (r) => r.status === "APPROVED" || r.status === "ATTENDED"
+  );
 
   const filteredRegistrations =
-    reportFilter === "ALL" ? event.registrations : event.registrations.filter((r) => r.status === reportFilter)
+    reportFilter === "ALL"
+      ? event.registrations
+      : event.registrations.filter((r) => r.status === reportFilter);
 
   const handleSubmitPost = () => {
     if (newPost.trim()) {
-      onCreatePost(newPost)
-      setNewPost("")
+      onCreatePost(newPost);
+      setNewPost("");
     }
-  }
+  };
 
   const handleSubmitComment = (postId: string) => {
-    const content = commentInputs[postId]
+    const content = commentInputs[postId];
     if (content?.trim()) {
-      onAddComment(postId, content)
-      setCommentInputs((prev) => ({ ...prev, [postId]: "" }))
+      onAddComment(postId, content);
+      setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
     }
-  }
+  };
 
   const toggleComments = (postId: string) => {
-    setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }))
-  }
+    setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -135,31 +172,31 @@ export function EventDetail({
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   const isSameDay = (date1: string, date2: string) => {
-    const d1 = new Date(date1)
-    const d2 = new Date(date2)
-    return d1.toDateString() === d2.toDateString()
-  }
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return d1.toDateString() === d2.toDateString();
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "bg-emerald-100 text-emerald-800"
+        return "bg-emerald-100 text-emerald-800";
       case "PENDING":
-        return "bg-amber-100 text-amber-800"
+        return "bg-amber-100 text-amber-800";
       case "REJECTED":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const handleExportReport = () => {
-    alert(`Downloading participation report for "${event.title}"...`)
-  }
+    alert(`Downloading participation report for "${event.title}"...`);
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -192,13 +229,17 @@ export function EventDetail({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Event</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete "{event.title}"? This action cannot be undone and will remove all
-                    associated posts and registrations.
+                    Are you sure you want to delete "{event.title}"? This action
+                    cannot be undone and will remove all associated posts and
+                    registrations.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => onDelete?.(event.id)}>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => onDelete?.(event.id)}
+                  >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -223,7 +264,7 @@ export function EventDetail({
         renderMainContent()
       )}
     </div>
-  )
+  );
 
   function renderMainContent() {
     return (
@@ -236,7 +277,9 @@ export function EventDetail({
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-                  <Badge className={getStatusColor(event.status)}>{event.status}</Badge>
+                  <Badge className={getStatusColor(event.status)}>
+                    {event.status}
+                  </Badge>
                   {isEventPast && (
                     <Badge variant="outline" className="ml-2">
                       Past Event
@@ -254,8 +297,12 @@ export function EventDetail({
               <CardContent className="pt-4">
                 <div className="flex gap-3">
                   <Avatar>
-                    <AvatarImage src={currentUser.avatarUrl || "/placeholder.svg"} />
-                    <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage
+                      src={currentUser.avatarUrl || "/placeholder.svg"}
+                    />
+                    <AvatarFallback>
+                      {currentUser.name.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <Textarea
@@ -265,7 +312,11 @@ export function EventDetail({
                       className="min-h-[80px] resize-none"
                     />
                     <div className="flex justify-end mt-2">
-                      <Button onClick={handleSubmitPost} disabled={!newPost.trim()} size="sm">
+                      <Button
+                        onClick={handleSubmitPost}
+                        disabled={!newPost.trim()}
+                        size="sm"
+                      >
                         <Send className="h-4 w-4 mr-1" />
                         Post
                       </Button>
@@ -286,25 +337,32 @@ export function EventDetail({
               </Card>
             ) : (
               posts.map((post) => {
-                const hasLiked = post.likedBy.includes(currentUser.id)
+                const hasLiked = post.likedBy.includes(currentUser.id);
                 return (
                   <Card key={post.id}>
                     <CardContent className="pt-4">
                       {/* Post Header */}
                       <div className="flex items-start gap-3 mb-3">
                         <Avatar>
-                          <AvatarImage src={post.author.avatarUrl || "/placeholder.svg"} />
-                          <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage
+                            src={post.author.avatarUrl || "/placeholder.svg"}
+                          />
+                          <AvatarFallback>
+                            {post.author.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-semibold">{post.author.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(post.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
+                            {new Date(post.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              }
+                            )}
                           </p>
                         </div>
                       </div>
@@ -315,10 +373,18 @@ export function EventDetail({
                       {/* Post Actions */}
                       <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-3">
                         <button
-                          className={`flex items-center gap-1 transition-colors ${hasLiked ? "text-emerald-600" : "hover:text-emerald-600"}`}
+                          className={`flex items-center gap-1 transition-colors ${
+                            hasLiked
+                              ? "text-emerald-600"
+                              : "hover:text-emerald-600"
+                          }`}
                           onClick={() => onLikePost(post.id)}
                         >
-                          <Heart className={`h-4 w-4 ${hasLiked ? "fill-current" : ""}`} />
+                          <Heart
+                            className={`h-4 w-4 ${
+                              hasLiked ? "fill-current" : ""
+                            }`}
+                          />
                           {post.likedBy.length}
                         </button>
                         <button
@@ -341,11 +407,20 @@ export function EventDetail({
                           {post.comments.map((comment) => (
                             <div key={comment.id} className="flex gap-2">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={comment.author.avatarUrl || "/placeholder.svg"} />
-                                <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage
+                                  src={
+                                    comment.author.avatarUrl ||
+                                    "/placeholder.svg"
+                                  }
+                                />
+                                <AvatarFallback>
+                                  {comment.author.name.charAt(0)}
+                                </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 bg-muted rounded-lg p-2">
-                                <p className="font-medium text-sm">{comment.author.name}</p>
+                                <p className="font-medium text-sm">
+                                  {comment.author.name}
+                                </p>
                                 <p className="text-sm">{comment.content}</p>
                               </div>
                             </div>
@@ -354,8 +429,14 @@ export function EventDetail({
                           {/* Add Comment */}
                           <div className="flex gap-2 mt-2">
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={currentUser.avatarUrl || "/placeholder.svg"} />
-                              <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                              <AvatarImage
+                                src={
+                                  currentUser.avatarUrl || "/placeholder.svg"
+                                }
+                              />
+                              <AvatarFallback>
+                                {currentUser.name.charAt(0)}
+                              </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 flex gap-2">
                               <input
@@ -370,10 +451,15 @@ export function EventDetail({
                                   }))
                                 }
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter") handleSubmitComment(post.id)
+                                  if (e.key === "Enter")
+                                    handleSubmitComment(post.id);
                                 }}
                               />
-                              <Button size="sm" variant="ghost" onClick={() => handleSubmitComment(post.id)}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleSubmitComment(post.id)}
+                              >
                                 <Send className="h-4 w-4" />
                               </Button>
                             </div>
@@ -382,7 +468,7 @@ export function EventDetail({
                       )}
                     </CardContent>
                   </Card>
-                )
+                );
               })
             )}
           </div>
@@ -405,7 +491,8 @@ export function EventDetail({
                 <div>
                   <p className="font-medium">Start</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(event.startTime)} at {formatTime(event.startTime)}
+                    {formatDate(event.startTime)} at{" "}
+                    {formatTime(event.startTime)}
                   </p>
                 </div>
               </div>
@@ -416,7 +503,9 @@ export function EventDetail({
                   <p className="text-sm text-muted-foreground">
                     {isSameDay(event.startTime, event.endTime)
                       ? formatTime(event.endTime)
-                      : `${formatDate(event.endTime)} at ${formatTime(event.endTime)}`}
+                      : `${formatDate(event.endTime)} at ${formatTime(
+                          event.endTime
+                        )}`}
                   </p>
                 </div>
               </div>
@@ -424,14 +513,22 @@ export function EventDetail({
                 <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="font-medium">
-                    {confirmedRegistrations.length} Volunteer{confirmedRegistrations.length !== 1 ? "s" : ""} Joined
+                    {confirmedRegistrations.length} Volunteer
+                    {confirmedRegistrations.length !== 1 ? "s" : ""} Joined
                   </p>
                   {confirmedRegistrations.length > 0 && (
                     <div className="flex -space-x-2 mt-2">
                       {confirmedRegistrations.slice(0, 5).map((reg) => (
-                        <Avatar key={reg.user.id} className="h-8 w-8 border-2 border-background">
-                          <AvatarImage src={reg.user.avatarUrl || "/placeholder.svg"} />
-                          <AvatarFallback>{reg.user.name.charAt(0)}</AvatarFallback>
+                        <Avatar
+                          key={reg.user.id}
+                          className="h-8 w-8 border-2 border-background"
+                        >
+                          <AvatarImage
+                            src={reg.user.avatarUrl || "/placeholder.svg"}
+                          />
+                          <AvatarFallback>
+                            {reg.user.name.charAt(0)}
+                          </AvatarFallback>
                         </Avatar>
                       ))}
                       {confirmedRegistrations.length > 5 && (
@@ -450,18 +547,26 @@ export function EventDetail({
           {!isOwner && currentUser.role === "VOLUNTEER" && (
             <Card>
               <CardContent className="pt-4">
-                {isEventPast ? (
+                {isEventEnded ? (
                   <Button className="w-full" disabled>
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Event Has Ended
                   </Button>
                 ) : registrationStatus === "PENDING" ? (
                   <div className="space-y-2">
-                    <Button className="w-full bg-amber-500 hover:bg-amber-600" disabled>
+                    <Button
+                      className="w-full bg-amber-500 hover:bg-amber-600"
+                      disabled
+                    >
                       <Clock className="mr-2 h-4 w-4" />
                       Request Sent / Pending Approval
                     </Button>
-                    <Button variant="outline" className="w-full bg-transparent" onClick={() => onLeave(event.id)}>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-transparent"
+                      onClick={() => onLeave(event.id)}
+                      disabled={isEventPast}
+                    >
                       Cancel Request
                     </Button>
                   </div>
@@ -475,16 +580,31 @@ export function EventDetail({
                       variant="outline"
                       className="w-full text-red-600 hover:bg-red-50 bg-transparent"
                       onClick={() => onLeave(event.id)}
+                      disabled={isEventPast}
                     >
-                      Leave Event
+                      {isEventPast
+                        ? "Cannot leave (Event in progress)"
+                        : "Leave Event"}
                     </Button>
                   </div>
                 ) : registrationStatus === "ATTENDED" ? (
-                  <Badge className="w-full justify-center py-2 bg-purple-100 text-purple-800">Completed</Badge>
+                  <Badge className="w-full justify-center py-2 bg-purple-100 text-purple-800">
+                    Completed
+                  </Badge>
                 ) : registrationStatus === "REJECTED" ? (
-                  <Badge className="w-full justify-center py-2 bg-red-100 text-red-800">Registration Rejected</Badge>
+                  <Badge className="w-full justify-center py-2 bg-red-100 text-red-800">
+                    Registration Rejected
+                  </Badge>
+                ) : isEventPast ? (
+                  <Button className="w-full" disabled>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Event In Progress
+                  </Button>
                 ) : (
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => onJoin(event.id)}>
+                  <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    onClick={() => onJoin(event.id)}
+                  >
                     <Users className="mr-2 h-4 w-4" />
                     Request to Join
                   </Button>
@@ -509,7 +629,9 @@ export function EventDetail({
                   </TabsList>
                   <TabsContent value="pending" className="mt-3">
                     {pendingRegistrations.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">No pending requests</p>
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No pending requests
+                      </p>
                     ) : (
                       <div className="flex flex-col gap-3">
                         {pendingRegistrations.map((reg) => (
@@ -519,12 +641,20 @@ export function EventDetail({
                           >
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={reg.user.avatarUrl || "/placeholder.svg"} />
-                                <AvatarFallback>{reg.user.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage
+                                  src={reg.user.avatarUrl || "/placeholder.svg"}
+                                />
+                                <AvatarFallback>
+                                  {reg.user.name.charAt(0)}
+                                </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="text-sm font-medium">{reg.user.name}</p>
-                                <p className="text-xs text-muted-foreground">{reg.user.email}</p>
+                                <p className="text-sm font-medium">
+                                  {reg.user.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {reg.user.email}
+                                </p>
                               </div>
                             </div>
                             <div className="flex gap-1">
@@ -532,7 +662,9 @@ export function EventDetail({
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100"
-                                onClick={() => onApproveRegistration?.(event.id, reg.user.id)}
+                                onClick={() =>
+                                  onApproveRegistration?.(event.id, reg.user.id)
+                                }
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
@@ -540,7 +672,9 @@ export function EventDetail({
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100"
-                                onClick={() => onRejectRegistration?.(event.id, reg.user.id)}
+                                onClick={() =>
+                                  onRejectRegistration?.(event.id, reg.user.id)
+                                }
                               >
                                 <X className="h-4 w-4" />
                               </Button>
@@ -552,7 +686,9 @@ export function EventDetail({
                   </TabsContent>
                   <TabsContent value="confirmed" className="mt-3">
                     {confirmedRegistrations.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">No confirmed participants</p>
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No confirmed participants
+                      </p>
                     ) : (
                       <div className="flex flex-col gap-3">
                         {confirmedRegistrations.map((reg) => (
@@ -562,13 +698,21 @@ export function EventDetail({
                           >
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={reg.user.avatarUrl || "/placeholder.svg"} />
-                                <AvatarFallback>{reg.user.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage
+                                  src={reg.user.avatarUrl || "/placeholder.svg"}
+                                />
+                                <AvatarFallback>
+                                  {reg.user.name.charAt(0)}
+                                </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="text-sm font-medium">{reg.user.name}</p>
+                                <p className="text-sm font-medium">
+                                  {reg.user.name}
+                                </p>
                                 {reg.status === "ATTENDED" && (
-                                  <Badge className="bg-purple-100 text-purple-800 text-xs">Completed</Badge>
+                                  <Badge className="bg-purple-100 text-purple-800 text-xs">
+                                    Completed
+                                  </Badge>
                                 )}
                               </div>
                             </div>
@@ -577,7 +721,9 @@ export function EventDetail({
                                 size="sm"
                                 variant="outline"
                                 className="text-xs bg-transparent"
-                                onClick={() => onMarkAttended?.(event.id, reg.user.id)}
+                                onClick={() =>
+                                  onMarkAttended?.(event.id, reg.user.id)
+                                }
                               >
                                 <UserCheck className="mr-1 h-3 w-3" />
                                 Mark Attended
@@ -594,7 +740,7 @@ export function EventDetail({
           )}
         </div>
       </div>
-    )
+    );
   }
 
   function renderReportTab() {
@@ -611,25 +757,53 @@ export function EventDetail({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={reportFilter} onValueChange={(value) => setReportFilter(value as typeof reportFilter)}>
+                <Select
+                  value={reportFilter}
+                  onValueChange={(value) =>
+                    setReportFilter(value as typeof reportFilter)
+                  }
+                >
                   <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="Filter" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All ({event.registrations.length})</SelectItem>
+                    <SelectItem value="ALL">
+                      All ({event.registrations.length})
+                    </SelectItem>
                     <SelectItem value="ATTENDED">
-                      Completed ({event.registrations.filter((r) => r.status === "ATTENDED").length})
+                      Completed (
+                      {
+                        event.registrations.filter(
+                          (r) => r.status === "ATTENDED"
+                        ).length
+                      }
+                      )
                     </SelectItem>
                     <SelectItem value="APPROVED">
-                      Registered ({event.registrations.filter((r) => r.status === "APPROVED").length})
+                      Registered (
+                      {
+                        event.registrations.filter(
+                          (r) => r.status === "APPROVED"
+                        ).length
+                      }
+                      )
                     </SelectItem>
                     <SelectItem value="PENDING">
-                      Pending ({event.registrations.filter((r) => r.status === "PENDING").length})
+                      Pending (
+                      {
+                        event.registrations.filter(
+                          (r) => r.status === "PENDING"
+                        ).length
+                      }
+                      )
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleExportReport} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                onClick={handleExportReport}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 Export Report (CSV)
               </Button>
@@ -660,19 +834,28 @@ export function EventDetail({
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={reg.user.avatarUrl || "/placeholder.svg"} />
-                            <AvatarFallback>{reg.user.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage
+                              src={reg.user.avatarUrl || "/placeholder.svg"}
+                            />
+                            <AvatarFallback>
+                              {reg.user.name.charAt(0)}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{reg.user.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{reg.user.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {reg.user.email}
+                      </TableCell>
                       <TableCell>
-                        {new Date(reg.registeredAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(reg.registeredAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -680,19 +863,19 @@ export function EventDetail({
                             reg.status === "ATTENDED"
                               ? "bg-purple-100 text-purple-800"
                               : reg.status === "APPROVED"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : reg.status === "PENDING"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-red-100 text-red-800"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : reg.status === "PENDING"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-red-100 text-red-800"
                           }
                         >
                           {reg.status === "ATTENDED"
                             ? "Completed"
                             : reg.status === "APPROVED"
-                              ? "Registered"
-                              : reg.status === "PENDING"
-                                ? "Pending"
-                                : "Cancelled"}
+                            ? "Registered"
+                            : reg.status === "PENDING"
+                            ? "Pending"
+                            : "Cancelled"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -702,7 +885,9 @@ export function EventDetail({
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100"
-                              onClick={() => onApproveRegistration?.(event.id, reg.user.id)}
+                              onClick={() =>
+                                onApproveRegistration?.(event.id, reg.user.id)
+                              }
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -710,7 +895,9 @@ export function EventDetail({
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-100"
-                              onClick={() => onRejectRegistration?.(event.id, reg.user.id)}
+                              onClick={() =>
+                                onRejectRegistration?.(event.id, reg.user.id)
+                              }
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -721,7 +908,9 @@ export function EventDetail({
                             size="sm"
                             variant="outline"
                             className="text-xs bg-transparent"
-                            onClick={() => onMarkAttended?.(event.id, reg.user.id)}
+                            onClick={() =>
+                              onMarkAttended?.(event.id, reg.user.id)
+                            }
                           >
                             <UserCheck className="mr-1 h-3 w-3" />
                             Mark Attended
@@ -739,29 +928,40 @@ export function EventDetail({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t">
             <div className="text-center">
               <p className="text-2xl font-bold">{event.registrations.length}</p>
-              <p className="text-sm text-muted-foreground">Total Registrations</p>
+              <p className="text-sm text-muted-foreground">
+                Total Registrations
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-emerald-600">
-                {event.registrations.filter((r) => r.status === "APPROVED").length}
+                {
+                  event.registrations.filter((r) => r.status === "APPROVED")
+                    .length
+                }
               </p>
               <p className="text-sm text-muted-foreground">Registered</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-purple-600">
-                {event.registrations.filter((r) => r.status === "ATTENDED").length}
+                {
+                  event.registrations.filter((r) => r.status === "ATTENDED")
+                    .length
+                }
               </p>
               <p className="text-sm text-muted-foreground">Completed</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-amber-600">
-                {event.registrations.filter((r) => r.status === "PENDING").length}
+                {
+                  event.registrations.filter((r) => r.status === "PENDING")
+                    .length
+                }
               </p>
               <p className="text-sm text-muted-foreground">Pending</p>
             </div>
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 }
