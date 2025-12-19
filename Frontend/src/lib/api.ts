@@ -43,7 +43,13 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   const contentType = response.headers.get("content-type");
   if (!contentType || !contentType.includes("application/json")) {
-    throw new Error("Server không phản hồi đúng định dạng JSON");
+    const text = await response.text();
+    throw new Error(
+      `Server không phản hồi đúng định dạng JSON. Có thể do lỗi 404 hoặc 500. Nội dung: ${text.substring(
+        0,
+        100
+      )}`
+    );
   }
 
   const data = await response.json();
@@ -153,7 +159,10 @@ export const authApi = {
   },
 
   // --- API Đổi mật khẩu (Giữ lại từ HEAD) ---
-  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> {
     try {
       return await fetchWithAuth(`${API_URL}/auth/change-password`, {
         method: "PUT",
@@ -236,9 +245,12 @@ export const adminApi = {
     userId: string
   ): Promise<{ message: string; user: User }> {
     try {
-      return await fetchWithAuth(`${API_URL}/admin/users/${userId}/toggle-status`, {
-        method: "PATCH",
-      });
+      return await fetchWithAuth(
+        `${API_URL}/admin/users/${userId}/toggle-status`,
+        {
+          method: "PATCH",
+        }
+      );
     } catch (error) {
       console.error("Error toggling user status:", error);
       throw error;
@@ -279,11 +291,11 @@ export const adminApi = {
       const token = authApi.getToken();
       const queryParams = new URLSearchParams();
       if (status) queryParams.append("status", status);
-      
+
       const url = `${API_URL}/admin/export/events/csv${
         queryParams.toString() ? `?${queryParams.toString()}` : ""
       }`;
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -307,11 +319,11 @@ export const adminApi = {
       const token = authApi.getToken();
       const queryParams = new URLSearchParams();
       if (status) queryParams.append("status", status);
-      
+
       const url = `${API_URL}/admin/export/events/json${
         queryParams.toString() ? `?${queryParams.toString()}` : ""
       }`;
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -330,17 +342,20 @@ export const adminApi = {
   },
 
   // Export users to CSV
-  async exportUsersCSV(params?: { role?: string; status?: string }): Promise<Blob> {
+  async exportUsersCSV(params?: {
+    role?: string;
+    status?: string;
+  }): Promise<Blob> {
     try {
       const token = authApi.getToken();
       const queryParams = new URLSearchParams();
       if (params?.role) queryParams.append("role", params.role);
       if (params?.status) queryParams.append("status", params.status);
-      
+
       const url = `${API_URL}/admin/export/users/csv${
         queryParams.toString() ? `?${queryParams.toString()}` : ""
       }`;
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -359,17 +374,20 @@ export const adminApi = {
   },
 
   // Export users to JSON
-  async exportUsersJSON(params?: { role?: string; status?: string }): Promise<Blob> {
+  async exportUsersJSON(params?: {
+    role?: string;
+    status?: string;
+  }): Promise<Blob> {
     try {
       const token = authApi.getToken();
       const queryParams = new URLSearchParams();
       if (params?.role) queryParams.append("role", params.role);
       if (params?.status) queryParams.append("status", params.status);
-      
+
       const url = `${API_URL}/admin/export/users/json${
         queryParams.toString() ? `?${queryParams.toString()}` : ""
       }`;
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -461,6 +479,48 @@ export const eventApi = {
       throw error;
     }
   },
+
+  // Hủy đăng ký tham gia event (VOLUNTEER)
+  async cancelRegistration(eventId: string): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/${eventId}/register`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error cancelling registration:", error);
+      throw error;
+    }
+  },
+
+  // Duyệt đăng ký (EVENT_MANAGER)
+  async approveRegistration(eventId: string, userId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(
+        `${API_URL}/events/${eventId}/registrations/${userId}/approve`,
+        {
+          method: "PATCH",
+        }
+      );
+    } catch (error) {
+      console.error("Error approving registration:", error);
+      throw error;
+    }
+  },
+
+  // Từ chối đăng ký (EVENT_MANAGER)
+  async rejectRegistration(eventId: string, userId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(
+        `${API_URL}/events/${eventId}/registrations/${userId}/reject`,
+        {
+          method: "PATCH",
+        }
+      );
+    } catch (error) {
+      console.error("Error rejecting registration:", error);
+      throw error;
+    }
+  },
 };
 
 // ============ POST APIs (GỘP CẢ HAI) ============
@@ -476,7 +536,11 @@ export const postApi = {
   },
 
   // Tạo bài viết mới (Giữ tính năng upload ảnh imageUrl của HEAD, nhưng trả về kiểu Post)
-  async createPost(eventId: string, content: string, imageUrl?: string): Promise<Post> {
+  async createPost(
+    eventId: string,
+    content: string,
+    imageUrl?: string
+  ): Promise<Post> {
     try {
       return await fetchWithAuth(`${API_URL}/posts/events/${eventId}/posts`, {
         method: "POST",
