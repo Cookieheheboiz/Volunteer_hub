@@ -5,7 +5,7 @@ exports.getNotifications = async (req, res) => {
     const userId = req.user.userId;
 
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: { recipientId: userId },
       orderBy: { createdAt: "desc" },
       take: 50, // Giới hạn 50 thông báo gần nhất
     });
@@ -27,7 +27,7 @@ exports.markAsRead = async (req, res) => {
     const notification = await prisma.notification.findFirst({
       where: {
         id,
-        userId,
+        recipientId: userId,
       },
     });
 
@@ -45,5 +45,56 @@ exports.markAsRead = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi cập nhật thông báo" });
+  }
+};
+
+// Đánh dấu tất cả thông báo đã đọc
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    await prisma.notification.updateMany({
+      where: {
+        recipientId: userId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    });
+
+    res.json({ message: "Đã đánh dấu tất cả thông báo là đã đọc" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi cập nhật thông báo" });
+  }
+};
+
+// Xóa thông báo
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    // Kiểm tra thông báo có thuộc về user này không
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id,
+        recipientId: userId,
+      },
+    });
+
+    if (!notification) {
+      return res.status(404).json({ error: "Thông báo không tồn tại" });
+    }
+
+    await prisma.notification.delete({
+      where: { id },
+    });
+
+    res.json({ message: "Đã xóa thông báo" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi xóa thông báo" });
   }
 };

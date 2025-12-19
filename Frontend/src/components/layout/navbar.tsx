@@ -3,8 +3,6 @@
 import { useState } from "react"
 import { Menu, LogOut, Heart, Lock } from "lucide-react"
 
-
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
 import { Button } from "@/src/components/ui/button"
 
@@ -17,34 +15,27 @@ import {
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
 import { NotificationCenter } from "./notification-center"
-
 import { ChangePasswordModal } from "@/src/components/auth/change-password-modal"
+import { useNotifications } from "@/src/hooks/use-notifications"
 
-
-import type { User, Notification } from "@/src/lib/types"
+import type { User } from "@/src/lib/types"
 
 
 interface NavbarProps {
   user: User
-  notifications: Notification[]
   sidebarOpen: boolean
   onMenuToggle: () => void
   onLogout: () => void
-  onDeleteNotification: (notificationId: string) => void
-  onMarkAllNotificationsRead: () => void
 }
 
 export function Navbar({
   user,
-  notifications,
   sidebarOpen,
   onMenuToggle,
   onLogout,
-  onDeleteNotification,
-  onMarkAllNotificationsRead,
 }: NavbarProps) {
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-  const userNotifications = notifications.filter((n) => n.userId === user.id)
+  const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -61,9 +52,10 @@ export function Navbar({
         </div>
         <div className="flex items-center gap-4">
           <NotificationCenter
-            notifications={userNotifications}
-            onDelete={onDeleteNotification}
-            onMarkAllRead={onMarkAllNotificationsRead}
+            notifications={notifications}
+            onDelete={deleteNotification}
+            onMarkAllRead={markAllAsRead}
+            onMarkAsRead={markAsRead}
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
