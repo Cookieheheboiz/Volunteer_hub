@@ -20,6 +20,8 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   Filter,
+  ShieldCheck, // <--- Mới thêm
+  Ban,         // <--- Mới thêm
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
@@ -79,6 +81,11 @@ interface EventDetailProps {
   onApproveRegistration?: (eventId: string, userId: string) => void;
   onRejectRegistration?: (eventId: string, userId: string) => void;
   onMarkAttended?: (eventId: string, userId: string) => void;
+  
+  // --- THÊM PROPS CHO ADMIN ---
+  isAdmin?: boolean;
+  onApproveEvent?: (eventId: string) => void;
+  onRejectEvent?: (eventId: string) => void;
 }
 
 export function EventDetail({
@@ -96,6 +103,10 @@ export function EventDetail({
   onApproveRegistration,
   onRejectRegistration,
   onMarkAttended,
+  // Destructure props admin
+  isAdmin,
+  onApproveEvent,
+  onRejectEvent
 }: EventDetailProps) {
   const [newPost, setNewPost] = useState("");
   const [expandedComments, setExpandedComments] = useState<
@@ -207,8 +218,29 @@ export function EventDetail({
           Back to Events
         </Button>
 
+        {/* --- KHU VỰC BUTTON CỦA ADMIN --- */}
+        {isAdmin && event.status === "PENDING" && (
+           <div className="flex gap-2">
+             <Button 
+               className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+               onClick={() => onApproveEvent?.(event.id)}
+             >
+               <ShieldCheck className="h-4 w-4" />
+               Approve Event
+             </Button>
+             <Button 
+               variant="destructive"
+               className="gap-2"
+               onClick={() => onRejectEvent?.(event.id)}
+             >
+               <Ban className="h-4 w-4" />
+               Reject
+             </Button>
+           </div>
+        )}
+
         {/* Edit/Delete buttons for Event Manager who owns this event */}
-        {isOwner && isEventManager && (
+        {isOwner && isEventManager && !isAdmin && (
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => onEdit?.(event)}>
               <Edit className="h-4 w-4 mr-1" />
