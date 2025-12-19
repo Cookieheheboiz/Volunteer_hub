@@ -143,17 +143,44 @@ export default function ManagerDashboardPage() {
 
   const handleCreateEvent = async (eventData: any) => {
     try {
-      await eventApi.createEvent(eventData);
+      if (editingEvent) {
+        await eventApi.updateEvent(editingEvent.id, eventData);
+        toast({
+          title: "Cập nhật sự kiện thành công",
+          description: "Thông tin sự kiện đã được cập nhật.",
+        });
+      } else {
+        await eventApi.createEvent(eventData);
+        toast({
+          title: "Tạo sự kiện thành công",
+          description: "Sự kiện đang chờ duyệt.",
+        });
+      }
       await loadEvents();
       setShowCreateModal(false);
-      toast({
-        title: "Tạo sự kiện thành công",
-        description: "Sự kiện đang chờ duyệt.",
-      });
+      setEditingEvent(null);
     } catch (error: any) {
       toast({
         title: "Lỗi",
         description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await eventApi.deleteEvent(eventId);
+      toast({
+        title: "Xóa sự kiện thành công",
+        description: "Sự kiện đã được xóa khỏi hệ thống.",
+      });
+      setSelectedEventId(null);
+      loadEvents();
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể xóa sự kiện",
         variant: "destructive",
       });
     }
@@ -210,7 +237,7 @@ export default function ManagerDashboardPage() {
               setEditingEvent(event);
               setShowCreateModal(true);
             }}
-            onDelete={() => {}}
+            onDelete={handleDeleteEvent}
             onApproveRegistration={handleApproveRegistration}
             onRejectRegistration={handleRejectRegistration}
             onMarkAttended={() => {}}

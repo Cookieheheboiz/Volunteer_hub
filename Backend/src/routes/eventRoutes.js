@@ -33,6 +33,22 @@ router.post(
   eventController.createEvent
 );
 
+// PUT /api/events/:id - Cập nhật sự kiện (Chỉ EVENT_MANAGER)
+router.put(
+  "/:id",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.updateEvent
+);
+
+// DELETE /api/events/:id - Xóa sự kiện (Chỉ EVENT_MANAGER)
+router.delete(
+  "/:id",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.deleteEvent
+);
+
 // POST /api/events/:id/register - Tình nguyện viên đăng ký tham gia sự kiện
 router.post(
   "/:id/register",
