@@ -716,14 +716,19 @@ export function EventDetail({
                                 )}
                               </div>
                             </div>
-                            {reg.status === "APPROVED" && isEventPast && (
+                            {/* Chỉ hiển thị nút Mark Attended khi: 
+                                1. User là owner của event
+                                2. Registration đã được APPROVED 
+                                3. Sự kiện đã kết thúc (isEventEnded) */}
+                            {isOwner && reg.status === "APPROVED" && isEventEnded && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-xs bg-transparent"
+                                className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
                                 onClick={() =>
                                   onMarkAttended?.(event.id, reg.user.id)
                                 }
+                                title="Xác nhận tình nguyện viên đã hoàn thành sự kiện"
                               >
                                 <UserCheck className="mr-1 h-3 w-3" />
                                 Mark Attended
@@ -903,14 +908,16 @@ export function EventDetail({
                             </Button>
                           </div>
                         )}
-                        {reg.status === "APPROVED" && isEventPast && (
+                        {/* Hiển thị nút Mark Attended trong table khi sự kiện đã kết thúc */}
+                        {reg.status === "APPROVED" && isEventEnded && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs bg-transparent"
+                            className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
                             onClick={() =>
                               onMarkAttended?.(event.id, reg.user.id)
                             }
+                            title="Xác nhận tình nguyện viên đã hoàn thành sự kiện"
                           >
                             <UserCheck className="mr-1 h-3 w-3" />
                             Mark Attended

@@ -3,21 +3,22 @@ export type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "ONGOING" | "COM
 export type RegistrationStatus = "PENDING" | "APPROVED" | "REJECTED" | "ATTENDED"
 export type UserStatus = "ACTIVE" | "BANNED"
 export type NotificationType =
-  | "APPROVED"
-  | "REJECTED"
-  | "COMPLETED"
-  | "EVENT_APPROVED"
-  | "EVENT_REJECTED"
   | "NEW_REGISTRATION"
+  | "CANCELLED_REGISTRATION"
+  | "EVENT_APPROVED"
+  | "EVENT_REMINDER"
+  | "NEW_POST"
+  | "NEW_COMMENT"
+  | "POST_LIKE"
 
 export interface Notification {
   id: string
   type: NotificationType
-  title: string
-  message: string
-  createdAt: string
+  content: string
+  link: string | null
   isRead: boolean
-  userId: string // The user this notification belongs to
+  createdAt: string
+  recipientId: string
 }
 
 export interface User {
