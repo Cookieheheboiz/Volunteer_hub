@@ -466,6 +466,40 @@ export const eventApi = {
     }
   },
 
+  // Cập nhật event (EVENT_MANAGER)
+  async updateEvent(
+    eventId: string,
+    eventData: {
+      title: string;
+      description: string;
+      location: string;
+      startTime: string;
+      endTime: string;
+    }
+  ): Promise<Event> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/${eventId}`, {
+        method: "PUT",
+        body: JSON.stringify(eventData),
+      });
+    } catch (error) {
+      console.error("Error updating event:", error);
+      throw error;
+    }
+  },
+
+  // Xóa event (EVENT_MANAGER)
+  async deleteEvent(eventId: string): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/events/${eventId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      throw error;
+    }
+  },
+
   // Đăng ký tham gia event (VOLUNTEER)
   async registerForEvent(
     eventId: string
