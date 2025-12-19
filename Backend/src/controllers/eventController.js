@@ -199,6 +199,104 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+// Cập nhật sự kiện (EVENT_MANAGER)
+exports.updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, location, startTime, endTime } = req.body;
+    const userId = req.user.userId;
+
+    // Kiểm tra sự kiện tồn tại và thuộc về user này
+    const existingEvent = await prisma.event.findUnique({
+      where: { id },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ error: "Sự kiện không tồn tại" });
+    }
+
+    if (existingEvent.creatorId !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Bạn không có quyền chỉnh sửa sự kiện này" });
+    }
+
+    const updatedEvent = await prisma.event.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        location,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        registrations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.json(updatedEvent);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi cập nhật sự kiện" });
+  }
+};
+
+// Xóa sự kiện (EVENT_MANAGER)
+exports.deleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    // Kiểm tra sự kiện tồn tại và thuộc về user này
+    const existingEvent = await prisma.event.findUnique({
+      where: { id },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ error: "Sự kiện không tồn tại" });
+    }
+
+    if (existingEvent.creatorId !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Bạn không có quyền xóa sự kiện này" });
+    }
+
+    // Xóa các bản ghi liên quan (nếu cần, ví dụ: registrations, posts)
+    // Prisma có thể cấu hình cascade delete, nhưng ở đây ta xóa thủ công hoặc để Prisma lo nếu schema đã set
+    // Giả sử schema đã set onDelete: Cascade cho các relation
+
+    await prisma.event.delete({
+      where: { id },
+    });
+
+    res.json({ message: "Xóa sự kiện thành công" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi xóa sự kiện" });
+  }
+};
+
 // Đăng ký tham gia sự kiện (VOLUNTEER)
 exports.registerEvent = async (req, res) => {
   try {
@@ -272,11 +370,9 @@ exports.cancelRegistration = async (req, res) => {
 
     // Kiểm tra xem sự kiện đã diễn ra chưa
     if (new Date(event.startTime) < new Date()) {
-      return res
-        .status(400)
-        .json({
-          error: "Không thể hủy đăng ký khi sự kiện đang hoặc đã diễn ra",
-        });
+      return res.status(400).json({
+        error: "Không thể hủy đăng ký khi sự kiện đang hoặc đã diễn ra",
+      });
     }
 
     // Kiểm tra đã đăng ký chưa
