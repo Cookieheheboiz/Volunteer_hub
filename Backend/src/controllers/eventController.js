@@ -235,7 +235,7 @@ exports.registerEvent = async (req, res) => {
       data: {
         userId: volunteerId,
         eventId,
-        status: "REGISTERED", // Mặc định là đã đăng ký
+        status: "PENDING", // Chờ event manager duyệt
       },
       include: {
         user: {
@@ -253,5 +253,146 @@ exports.registerEvent = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi đăng ký sự kiện" });
+  }
+};
+// Hủy đăng ký tham gia sự kiện (VOLUNTEER)
+exports.cancelRegistration = async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+    const volunteerId = req.user.userId;
+
+    // Kiểm tra sự kiện có tồn tại không
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: "Sự kiện không tồn tại" });
+    }
+
+    // Kiểm tra xem sự kiện đã diễn ra chưa
+    if (new Date(event.startTime) < new Date()) {
+      return res
+        .status(400)
+        .json({
+          error: "Không thể hủy đăng ký khi sự kiện đang hoặc đã diễn ra",
+        });
+    }
+
+    // Kiểm tra đã đăng ký chưa
+    const existingRegistration = await prisma.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: volunteerId,
+          eventId,
+        },
+      },
+    });
+
+    if (!existingRegistration) {
+      return res.status(400).json({ error: "Bạn chưa đăng ký sự kiện này" });
+    }
+
+    // Xóa đăng ký
+    await prisma.eventRegistration.delete({
+      where: {
+        userId_eventId: {
+          userId: volunteerId,
+          eventId,
+        },
+      },
+    });
+
+    res.json({ message: "Hủy đăng ký thành công" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi hủy đăng ký" });
+  }
+};
+// Duyệt đăng ký (EVENT_MANAGER)
+exports.approveRegistration = async (req, res) => {
+  try {
+    const { id: eventId, userId } = req.params;
+    const managerId = req.user.userId;
+
+    // Kiểm tra quyền sở hữu event
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event || event.creatorId !== managerId) {
+      return res
+        .status(403)
+        .json({ error: "Bạn không có quyền quản lý sự kiện này" });
+    }
+
+    const registration = await prisma.eventRegistration.update({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId,
+        },
+      },
+      data: { status: "APPROVED" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    res.json({ message: "Đã duyệt đăng ký", registration });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi duyệt đăng ký" });
+  }
+};
+
+// Từ chối đăng ký (EVENT_MANAGER)
+exports.rejectRegistration = async (req, res) => {
+  try {
+    const { id: eventId, userId } = req.params;
+    const managerId = req.user.userId;
+
+    // Kiểm tra quyền sở hữu event
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event || event.creatorId !== managerId) {
+      return res
+        .status(403)
+        .json({ error: "Bạn không có quyền quản lý sự kiện này" });
+    }
+
+    const registration = await prisma.eventRegistration.update({
+      where: {
+        userId_eventId: {
+          userId,
+          eventId,
+        },
+      },
+      data: { status: "REJECTED" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    res.json({ message: "Đã từ chối đăng ký", registration });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Lỗi khi từ chối đăng ký" });
   }
 };

@@ -30,6 +30,8 @@ export default function Home() {
         }
       } catch (error) {
         // Not logged in or invalid token, stay on landing page
+        console.error("Auth check failed:", error);
+        authApi.removeToken();
         setIsLoading(false);
       }
     };
