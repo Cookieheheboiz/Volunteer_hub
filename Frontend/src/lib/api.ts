@@ -744,13 +744,11 @@ export const uploadApi = {
 
     const data = await response.json();
 
-    // Nếu url là đường dẫn tương đối (bắt đầu bằng /), thêm domain của backend vào
     if (data.url && data.url.startsWith("/")) {
       try {
         const urlObj = new URL(API_URL);
         return `${urlObj.origin}${data.url}`;
       } catch (e) {
-        // Fallback nếu API_URL không hợp lệ hoặc là đường dẫn tương đối
         return `http://localhost:3000${data.url}`;
       }
     }
