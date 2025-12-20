@@ -6,6 +6,9 @@ import { Navbar } from "@/src/components/layout/navbar";
 import { Sidebar } from "@/src/components/layout/sidebar";
 import { VolunteerDashboard } from "@/src/components/dashboard/volunteer-dashboard";
 import { EventDetail } from "@/src/components/events/event-detail";
+// 1. IMPORT COMPONENT V0
+import { VolunteerOverview } from "@/src/components/dashboard/volunteer-overview"; 
+
 import { authApi, eventApi, postApi } from "@/src/lib/api";
 import type { User, Event, Notification, Post } from "@/src/lib/types";
 import { useToast } from "@/src/hooks/use-toast";
@@ -19,9 +22,11 @@ export default function VolunteerDashboardPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState("discover");
-  const [notifications, setNotifications] =
-    useState<Notification[]>(mockNotifications);
+  
+  // 2. Mặc định vào Overview
+  const [currentView, setCurrentView] = useState("overview"); 
+  
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -29,7 +34,7 @@ export default function VolunteerDashboardPage() {
       try {
         const user = await authApi.getMe();
         if (user.role !== "VOLUNTEER") {
-          router.push("/"); // Redirect if not volunteer
+          router.push("/"); 
           return;
         }
         setCurrentUser(user);
@@ -191,13 +196,27 @@ export default function VolunteerDashboardPage() {
             onMarkAttended={() => {}}
           />
         ) : (
-          <VolunteerDashboard
-            events={events}
-            currentView={currentView}
-            currentUser={currentUser}
-            onViewDetails={setSelectedEventId}
-            onJoin={handleJoin}
-          />
+          /* PHẦN ĐIỀU HƯỚNG VIEW */
+          <>
+            {currentView === "overview" ? (
+              // 3. SỬA LẠI PHẦN TRUYỀN PROPS Ở ĐÂY
+              <VolunteerOverview 
+                events={events} // Truyền danh sách sự kiện thật
+                posts={posts}   // Truyền danh sách bài viết thật
+                currentUser={currentUser!} // Dấu ! để khẳng định user đã tồn tại
+                onViewDetails={setSelectedEventId} // Kết nối hàm chuyển trang
+              />
+            ) : (
+              // Nếu chọn Discover/History -> Hiện Dashboard cũ
+              <VolunteerDashboard
+                events={events}
+                currentView={currentView}
+                currentUser={currentUser}
+                onViewDetails={setSelectedEventId}
+                onJoin={handleJoin}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
