@@ -18,7 +18,7 @@ interface EventCardProps {
   onViewDetails?: (eventId: string) => void;
   onClick?: () => void;
   actionLabel?: string;
-  
+
   onJoin?: (eventId: string) => void;
   showJoinButton?: boolean;
   currentUser?: UserType;
@@ -27,8 +27,8 @@ interface EventCardProps {
 export function EventCard({
   event,
   onViewDetails,
-  onClick,       // <--- Destructure props mới
-  actionLabel,   // <--- Destructure props mới
+  onClick, // <--- Destructure props mới
+  actionLabel, // <--- Destructure props mới
   onJoin,
   showJoinButton = true,
   currentUser,
@@ -147,7 +147,16 @@ export function EventCard({
   };
 
   return (
-    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow">
+    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow overflow-hidden">
+      {event.imageUrl && (
+        <div className="w-full h-48 overflow-hidden bg-muted">
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+          />
+        </div>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg line-clamp-2">{event.title}</CardTitle>
@@ -203,7 +212,8 @@ export function EventCard({
           className="flex-1 bg-transparent"
           onClick={handleMainAction} // 3. Sử dụng hàm xử lý mới
         >
-          {actionLabel || "View Details"} {/* Hiển thị label tùy chỉnh hoặc mặc định */}
+          {actionLabel || "View Details"}{" "}
+          {/* Hiển thị label tùy chỉnh hoặc mặc định */}
         </Button>
         {renderJoinButton()}
       </CardFooter>

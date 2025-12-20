@@ -44,10 +44,12 @@ enum NotificationType {
 model User {
   id             String              @id @default(cuid())
   email          String              @unique
-  passwordHash   String
+  passwordHash   String?
   name           String
   avatarUrl      String?
   role           Role                @default(VOLUNTEER)
+  provider       String?             // "google", "facebook", etc.
+  providerId     String?             // ID from the provider
   isActive       Boolean             @default(true)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
@@ -67,6 +69,7 @@ model Event {
   location      String
   startTime     DateTime
   endTime       DateTime
+  imageUrl      String?
   status        EventStatus         @default(PENDING)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -94,6 +97,7 @@ model EventRegistration {
 model Post {
   id        String     @id @default(cuid())
   content   String
+  imageUrl  String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   eventId   String

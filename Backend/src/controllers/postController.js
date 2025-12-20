@@ -4,7 +4,7 @@ const { createNotification, createBulkNotifications } = require("../utils/notifi
 exports.createPost = async (req, res) => {
   try {
     const { id: eventId } = req.params;
-    const { content } = req.body;
+    const { content, imageUrl } = req.body;
     const authorId = req.user.userId;
 
     // Kiểm tra sự kiện có tồn tại không
@@ -30,6 +30,7 @@ exports.createPost = async (req, res) => {
     const post = await prisma.post.create({
       data: {
         content,
+        imageUrl,
         authorId,
         eventId,
       },

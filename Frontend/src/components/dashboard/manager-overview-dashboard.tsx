@@ -100,7 +100,7 @@ export function ManagerOverviewDashboard({
 
   // Get relevant updates (notifications for this user)
   const userNotifications = notifications
-    .filter((n) => n.userId === currentUser.id)
+    .filter((n) => n.recipientId === currentUser.id)
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -258,6 +258,15 @@ export function ManagerOverviewDashboard({
                       onClick={() => onViewDetails(event.id)}
                     >
                       <CardContent className="pt-4">
+                        {event.imageUrl && (
+                          <div className="mb-3">
+                            <img
+                              src={event.imageUrl}
+                              alt={event.title}
+                              className="w-full h-32 object-cover rounded-md"
+                            />
+                          </div>
+                        )}
                         <h4 className="font-semibold text-sm line-clamp-1 mb-2">
                           {event.title}
                         </h4>

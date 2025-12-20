@@ -3,6 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/src/components/ui/button";
 import {
   Card,
@@ -17,10 +18,15 @@ import { Alert, AlertDescription } from "@/src/components/ui/alert";
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
+  onGoogleLogin?: (token: string, role?: any) => Promise<void>;
   onSwitchToSignup: () => void;
 }
 
-export function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps) {
+export function LoginForm({
+  onLogin,
+  onGoogleLogin,
+  onSwitchToSignup,
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -101,6 +107,34 @@ export function LoginForm({ onLogin, onSwitchToSignup }: LoginFormProps) {
             )}
           </Button>
         </form>
+
+        {onGoogleLogin && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    onGoogleLogin(credentialResponse.credential);
+                  }
+                }}
+                onError={() => {
+                  console.log("Login Failed");
+                }}
+              />
+            </div>
+          </>
+        )}
+
         <div className="mt-4 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <button

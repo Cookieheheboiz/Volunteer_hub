@@ -71,10 +71,10 @@ export default function ManagerDashboardPage() {
     }
   };
 
-  const handleCreatePost = async (content: string) => {
+  const handleCreatePost = async (content: string, imageUrl?: string) => {
     if (!selectedEventId) return;
     try {
-      await postApi.createPost(selectedEventId, content);
+      await postApi.createPost(selectedEventId, content, imageUrl);
       await loadPosts(selectedEventId);
       toast({
         title: "Đã đăng bài",
@@ -222,12 +222,10 @@ export default function ManagerDashboardPage() {
     <div className="min-h-screen bg-background">
       <Navbar
         user={currentUser}
-        notifications={notifications}
         sidebarOpen={sidebarOpen}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onLogout={handleLogout}
-        onDeleteNotification={() => {}}
-        onMarkAllNotificationsRead={() => {}}
+        onUpdateUser={setCurrentUser}
       />
 
       <Sidebar

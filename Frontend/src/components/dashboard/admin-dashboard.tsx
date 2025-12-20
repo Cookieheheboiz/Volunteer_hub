@@ -32,7 +32,11 @@ import {
   CardDescription,
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,12 +110,13 @@ export function AdminDashboard({
 
   const handleExportEvents = async (format: "csv" | "json") => {
     try {
-      const blob = format === "csv" 
-        ? await adminApi.exportEventsCSV() 
-        : await adminApi.exportEventsJSON();
-      
+      const blob =
+        format === "csv"
+          ? await adminApi.exportEventsCSV()
+          : await adminApi.exportEventsJSON();
+
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `events_${Date.now()}.${format}`;
       document.body.appendChild(a);
@@ -119,19 +124,20 @@ export function AdminDashboard({
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to export events. Please try again.');
+      console.error("Export failed:", error);
+      alert("Failed to export events. Please try again.");
     }
   };
 
   const handleExportUsers = async (format: "csv" | "json") => {
     try {
-      const blob = format === "csv" 
-        ? await adminApi.exportUsersCSV() 
-        : await adminApi.exportUsersJSON();
-      
+      const blob =
+        format === "csv"
+          ? await adminApi.exportUsersCSV()
+          : await adminApi.exportUsersJSON();
+
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `users_${Date.now()}.${format}`;
       document.body.appendChild(a);
@@ -139,8 +145,8 @@ export function AdminDashboard({
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to export users. Please try again.');
+      console.error("Export failed:", error);
+      alert("Failed to export users. Please try again.");
     }
   };
 
@@ -364,15 +370,24 @@ export function AdminDashboard({
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                       onClick={() => onViewDetails(update.event.id)}
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {update.event.title}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(
-                            update.event.startTime
-                          ).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {update.event.imageUrl && (
+                          <img
+                            src={update.event.imageUrl}
+                            alt={update.event.title}
+                            className="h-10 w-10 rounded object-cover shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {update.event.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(
+                              update.event.startTime
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                       <Badge
                         className={
@@ -416,11 +431,22 @@ export function AdminDashboard({
                       onClick={() => onViewDetails(event.id)}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{event.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(event.startTime).toLocaleDateString()}
-                          </p>
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {event.imageUrl && (
+                            <img
+                              src={event.imageUrl}
+                              alt={event.title}
+                              className="h-12 w-12 rounded object-cover shrink-0"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">
+                              {event.title}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(event.startTime).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                         <Badge
                           className="bg-orange-100 text-orange-800 shrink-0"
@@ -733,6 +759,79 @@ export function AdminDashboard({
     );
   }
 
+  if (currentView === "approved-events") {
+    return (
+      <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl font-bold">Approved Events</h1>
+        </div>
+
+        {approvedEvents.length === 0 ? (
+          <div className="bg-muted/50 rounded-lg p-8 text-center">
+            <CalendarCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No approved events found.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {approvedEvents.map((event) => (
+              <Card key={event.id}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    {event.imageUrl && (
+                      <div className="shrink-0">
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          className="h-24 w-24 rounded-md object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-lg">{event.title}</h3>
+                        <Badge
+                          className="bg-emerald-100 text-emerald-800"
+                          variant="secondary"
+                        >
+                          APPROVED
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {event.description}
+                      </p>
+                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(event.startTime).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <UserCircle className="h-4 w-4" />
+                          {event.creator.name}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          {event.registrations?.length || 0} participants
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        onClick={() => onViewDetails(event.id)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // Event Approval Queue (existing code)
   return (
     <div>
@@ -775,6 +874,15 @@ export function AdminDashboard({
             <Card key={event.id}>
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  {event.imageUrl && (
+                    <div className="shrink-0">
+                      <img
+                        src={event.imageUrl}
+                        alt={event.title}
+                        className="h-24 w-24 rounded-md object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-semibold text-lg">{event.title}</h3>
