@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-const { createNotification } = require("../utils/notificationHelper");
+const { createNotification, createBulkNotifications } = require("../utils/notificationHelper");
 
 exports.createPost = async (req, res) => {
   try {
@@ -10,6 +10,16 @@ exports.createPost = async (req, res) => {
     // Kiểm tra sự kiện có tồn tại không
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        registrations: {
+          where: {
+            status: { in: ["APPROVED", "ATTENDED"] }, // Chỉ gửi cho người đã được duyệt
+          },
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -29,6 +39,20 @@ exports.createPost = async (req, res) => {
         },
       },
     });
+
+    // Gửi thông báo cho tất cả người đã đăng ký sự kiện (trừ tác giả)
+    const registeredUserIds = event.registrations
+      .map((reg) => reg.userId)
+      .filter((userId) => userId !== authorId); // Không gửi cho chính mình
+
+    if (registeredUserIds.length > 0) {
+      await createBulkNotifications(
+        registeredUserIds,
+        "NEW_POST",
+        `${post.author.name} đã đăng bài viết mới trong sự kiện "${event.title}"`,
+        `/events/${eventId}`
+      );
+    }
 
     res.status(201).json({ ...post, likedBy: [], comments: [] });
   } catch (error) {
