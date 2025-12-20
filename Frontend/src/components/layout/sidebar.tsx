@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Calendar, History, Users, Shield, X, LayoutDashboard } from "lucide-react"
+import { Home, Calendar, History, Users, Shield, X, LayoutDashboard, CheckCircle } from "lucide-react" // 1. Thêm import CheckCircle
 import { Button } from "@/src/components/ui/button"
 import { cn } from "@/src/lib/utils"
 import type { Role } from "@/src/lib/types"
@@ -14,7 +14,10 @@ interface SidebarProps {
 }
 
 export function Sidebar({ role, currentView, onNavigate, isOpen, onClose }: SidebarProps) {
+  
+  // Menu Volunteer (Giữ nguyên Dashboard)
   const volunteerLinks = [
+    { id: "overview", label: "Dashboard", icon: LayoutDashboard },
     { id: "discover", label: "Discover Events", icon: Home },
     { id: "history", label: "My History", icon: History },
   ]
@@ -24,9 +27,11 @@ export function Sidebar({ role, currentView, onNavigate, isOpen, onClose }: Side
     { id: "my-events", label: "My Events", icon: Calendar },
   ]
 
+  // 2. CẬP NHẬT MENU ADMIN (Thêm Approved Events)
   const adminLinks = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "approval-queue", label: "Event Approval Queue", icon: Shield },
+    { id: "approved-events", label: "Approved Events", icon: CheckCircle }, // <--- Mới thêm
     { id: "users", label: "User Management", icon: Users },
   ]
 

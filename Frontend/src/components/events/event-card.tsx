@@ -14,7 +14,11 @@ import type { Event, User as UserType } from "@/src/lib/types";
 
 interface EventCardProps {
   event: Event;
-  onViewDetails: (eventId: string) => void;
+  // 1. Cập nhật props: onViewDetails là optional, thêm onClick và actionLabel
+  onViewDetails?: (eventId: string) => void;
+  onClick?: () => void;
+  actionLabel?: string;
+  
   onJoin?: (eventId: string) => void;
   showJoinButton?: boolean;
   currentUser?: UserType;
@@ -23,6 +27,8 @@ interface EventCardProps {
 export function EventCard({
   event,
   onViewDetails,
+  onClick,       // <--- Destructure props mới
+  actionLabel,   // <--- Destructure props mới
   onJoin,
   showJoinButton = true,
   currentUser,
@@ -73,6 +79,15 @@ export function EventCard({
     const startDate = new Date(start).toDateString();
     const endDate = new Date(end).toDateString();
     return startDate === endDate;
+  };
+
+  // 2. Hàm xử lý logic bấm nút chính
+  const handleMainAction = () => {
+    if (onClick) {
+      onClick(); // Ưu tiên gọi onClick (dùng cho Admin Dashboard)
+    } else if (onViewDetails) {
+      onViewDetails(event.id); // Fallback về onViewDetails cũ
+    }
   };
 
   const renderJoinButton = () => {
@@ -186,9 +201,9 @@ export function EventCard({
         <Button
           variant="outline"
           className="flex-1 bg-transparent"
-          onClick={() => onViewDetails(event.id)}
+          onClick={handleMainAction} // 3. Sử dụng hàm xử lý mới
         >
-          View Details
+          {actionLabel || "View Details"} {/* Hiển thị label tùy chỉnh hoặc mặc định */}
         </Button>
         {renderJoinButton()}
       </CardFooter>
