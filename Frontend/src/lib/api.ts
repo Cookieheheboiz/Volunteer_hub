@@ -743,6 +743,16 @@ export const uploadApi = {
     }
 
     const data = await response.json();
+
+    if (data.url && data.url.startsWith("/")) {
+      try {
+        const urlObj = new URL(API_URL);
+        return `${urlObj.origin}${data.url}`;
+      } catch (e) {
+        return `http://localhost:3000${data.url}`;
+      }
+    }
+
     return data.url;
   },
 };
