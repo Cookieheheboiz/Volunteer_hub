@@ -99,7 +99,6 @@ export function VolunteerDashboard({
     });
   };
 
-  // --- VIEW HISTORY (Giữ nguyên) ---
   if (currentView === "history") {
     return (
       <div>
@@ -125,6 +124,15 @@ export function VolunteerDashboard({
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => onViewDetails(event.id)}
                 >
+                  {event.imageUrl && (
+                    <div className="w-full h-32 overflow-hidden bg-muted">
+                      <img
+                        src={event.imageUrl}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold line-clamp-1">
@@ -165,13 +173,12 @@ export function VolunteerDashboard({
     );
   }
 
-  // --- VIEW DISCOVER (Đã cập nhật Search & Filter) ---
   return (
     <div>
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">Discover Events</h1>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           {/* Thanh tìm kiếm */}
           <div className="relative w-full sm:w-64">

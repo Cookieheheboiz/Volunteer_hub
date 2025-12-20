@@ -1,10 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Menu, LogOut, Heart, Lock } from "lucide-react"
+import { useState } from "react";
+import { Menu, LogOut, Heart, Lock } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar"
-import { Button } from "@/src/components/ui/button"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
+import { Button } from "@/src/components/ui/button";
 
 import {
   DropdownMenu,
@@ -13,19 +17,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu"
-import { NotificationCenter } from "./notification-center"
-import { ChangePasswordModal } from "@/src/components/auth/change-password-modal"
-import { useNotifications } from "@/src/hooks/use-notifications"
+} from "@/src/components/ui/dropdown-menu";
+import { NotificationCenter } from "./notification-center";
+import { ProfileModal } from "@/src/components/auth/profile-modal";
+import { useNotifications } from "@/src/hooks/use-notifications";
 
-import type { User } from "@/src/lib/types"
-
+import type { User, Notification } from "@/src/lib/types";
 
 interface NavbarProps {
-  user: User
-  sidebarOpen: boolean
-  onMenuToggle: () => void
-  onLogout: () => void
+  user: User;
+  sidebarOpen: boolean;
+  onMenuToggle: () => void;
+  onLogout: () => void;
+  onUpdateUser?: (user: User) => void;
+  notifications?: Notification[];
+  onDeleteNotification?: (id: string) => void;
+  onMarkAllNotificationsRead?: () => void;
 }
 
 export function Navbar({
@@ -33,9 +40,22 @@ export function Navbar({
   sidebarOpen,
   onMenuToggle,
   onLogout,
+  onUpdateUser,
+  notifications: propNotifications,
+  onDeleteNotification,
+  onMarkAllNotificationsRead,
 }: NavbarProps) {
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-  const { notifications, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const {
+    notifications: hookNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications();
+
+  const displayNotifications = propNotifications || hookNotifications;
+  const handleDelete = onDeleteNotification || deleteNotification;
+  const handleMarkAllRead = onMarkAllNotificationsRead || markAllAsRead;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,42 +67,52 @@ export function Navbar({
           </Button>
           <div className="flex items-center gap-2">
             <Heart className="h-6 w-6 text-emerald-600" />
-            <span className="font-bold text-xl hidden sm:inline">VolunteerHub</span>
+            <span className="font-bold text-xl hidden sm:inline">
+              VolunteerHub
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <NotificationCenter
-            notifications={notifications}
-            onDelete={deleteNotification}
-            onMarkAllRead={markAllAsRead}
+            notifications={displayNotifications}
+            onDelete={handleDelete}
+            onMarkAllRead={handleMarkAllRead}
             onMarkAsRead={markAsRead}
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 px-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.avatarUrl || "/placeholder.svg"} alt={user.name} />
+                  <AvatarImage
+                    src={user.avatarUrl || "/placeholder.svg"}
+                    alt={user.name}
+                  />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
+                <span className="hidden sm:inline text-sm font-medium">
+                  {user.name}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
                   <span>{user.name}</span>
-                  <span className="text-xs text-muted-foreground font-normal">{user.email}</span>
-                  <span className="text-xs text-emerald-600 font-medium mt-1">{user.role.replace("_", " ")}</span>
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {user.email}
+                  </span>
+                  <span className="text-xs text-emerald-600 font-medium mt-1">
+                    {user.role.replace("_", " ")}
+                  </span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              
-              {/* --- Nút đổi mật khẩu mới thêm --- */}
-              <DropdownMenuItem onClick={() => setIsChangePasswordOpen(true)}>
+
+              <DropdownMenuItem onClick={() => setIsProfileOpen(true)}>
                 <Lock className="mr-2 h-4 w-4" />
-                Change password
+                Account Settings
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onLogout} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
@@ -93,11 +123,14 @@ export function Navbar({
         </div>
       </div>
 
-      {/* --- Component Modal --- */}
-      <ChangePasswordModal 
-        isOpen={isChangePasswordOpen} 
-        onClose={() => setIsChangePasswordOpen(false)} 
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        user={user}
+        onUpdateUser={(updatedUser) => {
+          if (onUpdateUser) onUpdateUser(updatedUser);
+        }}
       />
     </header>
-  )
+  );
 }

@@ -8,6 +8,8 @@ const eventRoutes = require("./src/routes/eventRoutes");
 const postRoutes = require("./src/routes/postRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
+const uploadRoutes = require("./src/routes/uploadRoutes");
+const path = require("path");
 
 const app = express();
 app.use(
@@ -20,6 +22,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const PORT = process.env.PORT || 3000;
 
@@ -29,6 +32,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);

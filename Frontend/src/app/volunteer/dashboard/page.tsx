@@ -7,7 +7,7 @@ import { Sidebar } from "@/src/components/layout/sidebar";
 import { VolunteerDashboard } from "@/src/components/dashboard/volunteer-dashboard";
 import { EventDetail } from "@/src/components/events/event-detail";
 // 1. IMPORT COMPONENT V0
-import { VolunteerOverview } from "@/src/components/dashboard/volunteer-overview"; 
+import { VolunteerOverview } from "@/src/components/dashboard/volunteer-overview";
 
 import { authApi, eventApi, postApi } from "@/src/lib/api";
 import type { User, Event, Notification, Post } from "@/src/lib/types";
@@ -22,11 +22,12 @@ export default function VolunteerDashboardPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  
+
   // 2. Mặc định vào Overview
-  const [currentView, setCurrentView] = useState("overview"); 
-  
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [currentView, setCurrentView] = useState("overview");
+
+  const [notifications, setNotifications] =
+    useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function VolunteerDashboardPage() {
       try {
         const user = await authApi.getMe();
         if (user.role !== "VOLUNTEER") {
-          router.push("/"); 
+          router.push("/");
           return;
         }
         setCurrentUser(user);
@@ -72,10 +73,10 @@ export default function VolunteerDashboardPage() {
     }
   };
 
-  const handleCreatePost = async (content: string) => {
+  const handleCreatePost = async (content: string, imageUrl?: string) => {
     if (!selectedEventId) return;
     try {
-      await postApi.createPost(selectedEventId, content);
+      await postApi.createPost(selectedEventId, content, imageUrl);
       await loadPosts(selectedEventId);
       toast({
         title: "Đã đăng bài",
@@ -161,12 +162,10 @@ export default function VolunteerDashboardPage() {
     <div className="min-h-screen bg-background">
       <Navbar
         user={currentUser}
-        notifications={notifications}
         sidebarOpen={sidebarOpen}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onLogout={handleLogout}
-        onDeleteNotification={() => {}}
-        onMarkAllNotificationsRead={() => {}}
+        onUpdateUser={setCurrentUser}
       />
 
       <Sidebar
@@ -200,9 +199,9 @@ export default function VolunteerDashboardPage() {
           <>
             {currentView === "overview" ? (
               // 3. SỬA LẠI PHẦN TRUYỀN PROPS Ở ĐÂY
-              <VolunteerOverview 
+              <VolunteerOverview
                 events={events} // Truyền danh sách sự kiện thật
-                posts={posts}   // Truyền danh sách bài viết thật
+                posts={posts} // Truyền danh sách bài viết thật
                 currentUser={currentUser!} // Dấu ! để khẳng định user đã tồn tại
                 onViewDetails={setSelectedEventId} // Kết nối hàm chuyển trang
               />

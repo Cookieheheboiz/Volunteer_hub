@@ -21,7 +21,8 @@ import {
   FileSpreadsheet,
   Filter,
   ShieldCheck, // <--- Mới thêm
-  Ban,         // <--- Mới thêm
+  Ban, // <--- Mới thêm
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
@@ -32,6 +33,8 @@ import {
 } from "@/src/components/ui/avatar";
 import { Badge } from "@/src/components/ui/badge";
 import { Textarea } from "@/src/components/ui/textarea";
+import { Input } from "@/src/components/ui/input";
+import { uploadApi } from "@/src/lib/api";
 import {
   Tabs,
   TabsContent,
@@ -73,7 +76,7 @@ interface EventDetailProps {
   onBack: () => void;
   onJoin: (eventId: string) => void;
   onLeave: (eventId: string) => void;
-  onCreatePost: (content: string) => void;
+  onCreatePost: (content: string, imageUrl?: string) => void;
   onLikePost: (postId: string) => void;
   onAddComment: (postId: string, content: string) => void;
   onEdit?: (event: Event) => void;
@@ -81,7 +84,7 @@ interface EventDetailProps {
   onApproveRegistration?: (eventId: string, userId: string) => void;
   onRejectRegistration?: (eventId: string, userId: string) => void;
   onMarkAttended?: (eventId: string, userId: string) => void;
-  
+
   // --- THÊM PROPS CHO ADMIN ---
   isAdmin?: boolean;
   onApproveEvent?: (eventId: string) => void;
@@ -106,9 +109,11 @@ export function EventDetail({
   // Destructure props admin
   isAdmin,
   onApproveEvent,
-  onRejectEvent
+  onRejectEvent,
 }: EventDetailProps) {
   const [newPost, setNewPost] = useState("");
+  const [postImage, setPostImage] = useState("");
+  const [uploadingPostImage, setUploadingPostImage] = useState(false);
   const [expandedComments, setExpandedComments] = useState<
     Record<string, boolean>
   >({});
@@ -123,6 +128,24 @@ export function EventDetail({
   const isEventManager = currentUser.role === "EVENT_MANAGER";
   const isEventPast = new Date(event.startTime) < new Date();
   const isEventEnded = new Date(event.endTime) < new Date();
+
+  const handlePostImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingPostImage(true);
+      const url = await uploadApi.upload(file);
+      setPostImage(url);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Failed to upload image");
+    } finally {
+      setUploadingPostImage(false);
+    }
+  };
 
   // Check current user's registration status
   const userRegistration = event.registrations.find(
@@ -143,9 +166,10 @@ export function EventDetail({
       : event.registrations.filter((r) => r.status === reportFilter);
 
   const handleSubmitPost = () => {
-    if (newPost.trim()) {
-      onCreatePost(newPost);
+    if (newPost.trim() || postImage) {
+      onCreatePost(newPost, postImage);
       setNewPost("");
+      setPostImage("");
     }
   };
 
@@ -220,23 +244,23 @@ export function EventDetail({
 
         {/* --- KHU VỰC BUTTON CỦA ADMIN --- */}
         {isAdmin && event.status === "PENDING" && (
-           <div className="flex gap-2">
-             <Button 
-               className="bg-emerald-600 hover:bg-emerald-700 gap-2"
-               onClick={() => onApproveEvent?.(event.id)}
-             >
-               <ShieldCheck className="h-4 w-4" />
-               Approve Event
-             </Button>
-             <Button 
-               variant="destructive"
-               className="gap-2"
-               onClick={() => onRejectEvent?.(event.id)}
-             >
-               <Ban className="h-4 w-4" />
-               Reject
-             </Button>
-           </div>
+          <div className="flex gap-2">
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+              onClick={() => onApproveEvent?.(event.id)}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Approve Event
+            </Button>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={() => onRejectEvent?.(event.id)}
+            >
+              <Ban className="h-4 w-4" />
+              Reject
+            </Button>
+          </div>
         )}
 
         {/* Edit/Delete buttons for Event Manager who owns this event */}
@@ -306,6 +330,15 @@ export function EventDetail({
           {/* Event Header Card */}
           <Card>
             <CardContent className="pt-6">
+              {event.imageUrl && (
+                <div className="mb-6 rounded-lg overflow-hidden border">
+                  <img
+                    src={event.imageUrl}
+                    alt={event.title}
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+              )}
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
@@ -343,10 +376,52 @@ export function EventDetail({
                       onChange={(e) => setNewPost(e.target.value)}
                       className="min-h-[80px] resize-none"
                     />
-                    <div className="flex justify-end mt-2">
+                    {postImage && (
+                      <div className="mt-2 relative h-32 w-32 rounded-md overflow-hidden border">
+                        <img
+                          src={postImage}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-5 w-5"
+                          onClick={() => setPostImage("")}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id="post-image"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handlePostImageUpload}
+                          disabled={uploadingPostImage}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            document.getElementById("post-image")?.click()
+                          }
+                          disabled={uploadingPostImage}
+                        >
+                          <ImageIcon className="h-4 w-4 mr-1" />
+                          {uploadingPostImage ? "Uploading..." : "Add Image"}
+                        </Button>
+                      </div>
                       <Button
                         onClick={handleSubmitPost}
-                        disabled={!newPost.trim()}
+                        disabled={
+                          (!newPost.trim() && !postImage) || uploadingPostImage
+                        }
                         size="sm"
                       >
                         <Send className="h-4 w-4 mr-1" />
@@ -401,6 +476,15 @@ export function EventDetail({
 
                       {/* Post Content */}
                       <p className="mb-4">{post.content}</p>
+                      {post.imageUrl && (
+                        <div className="mb-4 rounded-md overflow-hidden border">
+                          <img
+                            src={post.imageUrl}
+                            alt="Post content"
+                            className="w-full h-auto max-h-96 object-cover"
+                          />
+                        </div>
+                      )}
 
                       {/* Post Actions */}
                       <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-3">
@@ -752,20 +836,22 @@ export function EventDetail({
                                 1. User là owner của event
                                 2. Registration đã được APPROVED 
                                 3. Sự kiện đã kết thúc (isEventEnded) */}
-                            {isOwner && reg.status === "APPROVED" && isEventEnded && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
-                                onClick={() =>
-                                  onMarkAttended?.(event.id, reg.user.id)
-                                }
-                                title="Xác nhận tình nguyện viên đã hoàn thành sự kiện"
-                              >
-                                <UserCheck className="mr-1 h-3 w-3" />
-                                Mark Attended
-                              </Button>
-                            )}
+                            {isOwner &&
+                              reg.status === "APPROVED" &&
+                              isEventEnded && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs bg-green-50 hover:bg-green-100 border-green-200"
+                                  onClick={() =>
+                                    onMarkAttended?.(event.id, reg.user.id)
+                                  }
+                                  title="Xác nhận tình nguyện viên đã hoàn thành sự kiện"
+                                >
+                                  <UserCheck className="mr-1 h-3 w-3" />
+                                  Mark Attended
+                                </Button>
+                              )}
                           </div>
                         ))}
                       </div>

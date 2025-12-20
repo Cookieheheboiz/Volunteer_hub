@@ -1,5 +1,8 @@
 const prisma = require("../config/prisma");
-const { createNotification, createBulkNotifications } = require("../utils/notificationHelper");
+const {
+  createNotification,
+  createBulkNotifications,
+} = require("../utils/notificationHelper");
 
 // Lấy tất cả sự kiện đã được duyệt
 exports.getAllEvents = async (req, res) => {
@@ -155,7 +158,8 @@ exports.getEventById = async (req, res) => {
 // Tạo sự kiện mới (EVENT_MANAGER)
 exports.createEvent = async (req, res) => {
   try {
-    const { title, description, location, startTime, endTime } = req.body;
+    const { title, description, location, startTime, endTime, imageUrl } =
+      req.body;
     const creatorId = req.user.userId;
 
     const event = await prisma.event.create({
@@ -167,6 +171,7 @@ exports.createEvent = async (req, res) => {
         endTime: new Date(endTime),
         creatorId,
         status: "PENDING", // Chờ admin duyệt
+        imageUrl,
       },
       include: {
         creator: {
@@ -220,7 +225,8 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, location, startTime, endTime } = req.body;
+    const { title, description, location, startTime, endTime, imageUrl } =
+      req.body;
     const userId = req.user.userId;
 
     // Kiểm tra sự kiện tồn tại và thuộc về user này
@@ -246,6 +252,7 @@ exports.updateEvent = async (req, res) => {
         location,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        imageUrl,
       },
       include: {
         creator: {
@@ -581,8 +588,8 @@ exports.markAttended = async (req, res) => {
 
     // Chỉ cho phép đánh dấu ATTENDED nếu registration đã được APPROVED
     if (existingRegistration.status !== "APPROVED") {
-      return res.status(400).json({ 
-        error: "Chỉ có thể đánh dấu hoàn thành cho đăng ký đã được duyệt" 
+      return res.status(400).json({
+        error: "Chỉ có thể đánh dấu hoàn thành cho đăng ký đã được duyệt",
       });
     }
 
