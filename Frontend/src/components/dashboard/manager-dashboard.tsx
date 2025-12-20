@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PlusCircle, Calendar, Filter } from "lucide-react";
+import { PlusCircle, Calendar, Filter, Search } from "lucide-react"; // Thêm icon Search
 import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input"; // Thêm Input component
 import { EventCard } from "@/src/components/events/event-card";
 import {
   Select,
@@ -30,15 +31,18 @@ export function ManagerDashboard({
   onCreateEvent,
 }: ManagerDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<FilterOption>("ALL");
+  const [searchQuery, setSearchQuery] = useState(""); // 1. State lưu từ khóa tìm kiếm
 
   const myEvents = events.filter(
     (e) => e?.creator?.id && currentUser?.id && e.creator.id === currentUser.id
   );
 
-  const filteredEvents =
-    statusFilter === "ALL"
-      ? myEvents
-      : myEvents.filter((e) => e.status === statusFilter);
+  // 2. Cập nhật logic lọc: Kết hợp trạng thái VÀ tên sự kiện
+  const filteredEvents = myEvents.filter((e) => {
+    const matchesStatus = statusFilter === "ALL" ? true : e.status === statusFilter;
+    const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   // Stats for quick overview
   const stats = {
@@ -93,32 +97,48 @@ export function ManagerDashboard({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-4 bg-muted/30 rounded-lg border">
-        <div className="flex items-center gap-3">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as FilterOption)}
-          >
-            <SelectTrigger className="w-[200px] bg-background">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Events ({stats.total})</SelectItem>
-              <SelectItem value="PENDING">
-                Pending Approval ({stats.pending})
-              </SelectItem>
-              <SelectItem value="APPROVED">
-                Approved/Published ({stats.approved})
-              </SelectItem>
-              <SelectItem value="REJECTED">
-                Rejected ({stats.rejected})
-              </SelectItem>
-            </SelectContent>
-          </Select>
+      {/* 3. Thanh công cụ: Thêm ô tìm kiếm bên cạnh bộ lọc */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 p-4 bg-muted/30 rounded-lg border">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          {/* Thanh tìm kiếm mới thêm */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search event name..."
+              className="pl-9 bg-background"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Bộ lọc trạng thái cũ */}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Filter className="hidden sm:block h-4 w-4 text-muted-foreground" />
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as FilterOption)}
+            >
+              <SelectTrigger className="w-full sm:w-[200px] bg-background">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Events ({stats.total})</SelectItem>
+                <SelectItem value="PENDING">
+                  Pending Approval ({stats.pending})
+                </SelectItem>
+                <SelectItem value="APPROVED">
+                  Approved/Published ({stats.approved})
+                </SelectItem>
+                <SelectItem value="REJECTED">
+                  Rejected ({stats.rejected})
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
           onClick={onCreateEvent}
         >
           <PlusCircle className="mr-2 h-5 w-5" />
@@ -145,14 +165,21 @@ export function ManagerDashboard({
       ) : filteredEvents.length === 0 ? (
         <div className="bg-muted/50 rounded-lg p-8 text-center">
           <p className="text-muted-foreground">
-            No events found with status "{getFilterLabel(statusFilter)}".
+            {/* Hiển thị thông báo phù hợp khi không tìm thấy */}
+            {searchQuery 
+              ? `No events found matching "${searchQuery}"`
+              : `No events found with status "${getFilterLabel(statusFilter)}".`
+            }
           </p>
           <Button
             variant="link"
             className="mt-2 text-emerald-600"
-            onClick={() => setStatusFilter("ALL")}
+            onClick={() => {
+              setStatusFilter("ALL");
+              setSearchQuery("");
+            }}
           >
-            View all events
+            Clear filters
           </Button>
         </div>
       ) : (
