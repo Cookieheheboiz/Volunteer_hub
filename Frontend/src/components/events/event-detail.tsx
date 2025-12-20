@@ -129,6 +129,18 @@ export function EventDetail({
   const isEventPast = new Date(event.startTime) < new Date();
   const isEventEnded = new Date(event.endTime) < new Date();
 
+  // Determine event time status
+  const now = new Date();
+  const startTime = new Date(event.startTime);
+  const endTime = new Date(event.endTime);
+  
+  let eventTimeStatus: "upcoming" | "ongoing" | "past" = "upcoming";
+  if (now >= endTime) {
+    eventTimeStatus = "past";
+  } else if (now >= startTime && now < endTime) {
+    eventTimeStatus = "ongoing";
+  }
+
   const handlePostImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -345,7 +357,17 @@ export function EventDetail({
                   <Badge className={getStatusColor(event.status)}>
                     {event.status}
                   </Badge>
-                  {isEventPast && (
+                  {eventTimeStatus === "upcoming" && (
+                    <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                      Upcoming
+                    </Badge>
+                  )}
+                  {eventTimeStatus === "ongoing" && (
+                    <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
+                      Ongoing
+                    </Badge>
+                  )}
+                  {eventTimeStatus === "past" && (
                     <Badge variant="outline" className="ml-2">
                       Past Event
                     </Badge>
@@ -664,10 +686,17 @@ export function EventDetail({
             <Card>
               <CardContent className="pt-4">
                 {isEventEnded ? (
-                  <Button className="w-full" disabled>
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Event Has Ended
-                  </Button>
+                  <div className="space-y-2">
+                    {registrationStatus === "ATTENDED" && (
+                      <Badge className="w-full justify-center py-2 bg-emerald-100 text-emerald-800 font-semibold">
+                        ✓ Completed
+                      </Badge>
+                    )}
+                    <Button className="w-full" disabled>
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      Event Has Ended
+                    </Button>
+                  </div>
                 ) : registrationStatus === "PENDING" ? (
                   <div className="space-y-2">
                     <Button
