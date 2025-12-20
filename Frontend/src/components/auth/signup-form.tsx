@@ -3,6 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Mail, Lock, User, UserCircle, AlertCircle } from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/src/components/ui/button";
 import {
   Card,
@@ -24,10 +25,15 @@ interface SignupFormProps {
     password: string,
     role: Role
   ) => Promise<void>;
+  onGoogleLogin?: (token: string, role?: Role) => Promise<void>;
   onSwitchToLogin: () => void;
 }
 
-export function SignupForm({ onSignup, onSwitchToLogin }: SignupFormProps) {
+export function SignupForm({
+  onSignup,
+  onGoogleLogin,
+  onSwitchToLogin,
+}: SignupFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -153,6 +159,35 @@ export function SignupForm({ onSignup, onSwitchToLogin }: SignupFormProps) {
             )}
           </Button>
         </form>
+
+        {onGoogleLogin && (
+          <>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    onGoogleLogin(credentialResponse.credential, role);
+                  }
+                }}
+                onError={() => {
+                  console.log("Login Failed");
+                }}
+                text="signup_with"
+              />
+            </div>
+          </>
+        )}
+
         <div className="mt-4 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <button

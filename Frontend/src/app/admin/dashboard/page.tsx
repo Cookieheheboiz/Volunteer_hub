@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/src/components/layout/navbar";
 import { Sidebar } from "@/src/components/layout/sidebar";
 // Giữ nguyên component AdminDashboard cũ để xử lý các tab cũ
-import { AdminDashboard } from "@/src/components/dashboard/admin-dashboard"; 
+import { AdminDashboard } from "@/src/components/dashboard/admin-dashboard";
 import { EventDetail } from "@/src/components/events/event-detail";
 // Import thêm EventCard
-import { EventCard } from "@/src/components/events/event-card"; 
+import { EventCard } from "@/src/components/events/event-card";
 // 1. IMPORT CÁC ICON VÀ DROPDOWN MENU CẦN THIẾT
 import { FileSpreadsheet, Download, ChevronDown, FileJson } from "lucide-react"; // Thêm icon FileJson
 import { Button } from "@/src/components/ui/button";
@@ -40,11 +40,12 @@ export default function AdminDashboardPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  
+
   // State view hiện tại
   const [currentView, setCurrentView] = useState("overview");
-  
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+
+  const [notifications, setNotifications] =
+    useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -221,7 +222,7 @@ export default function AdminDashboardPage() {
 
     const timestamp = new Date().toISOString().split("T")[0];
     const fileName = `approved_events_${timestamp}`;
-    
+
     let content = "";
     let mimeType = "";
     let extension = "";
@@ -234,9 +235,16 @@ export default function AdminDashboardPage() {
     } else {
       // Logic xuất CSV
       // Tạo header
-      const headers = ["ID", "Title", "Date", "Location", "Creator", "Participants"];
+      const headers = [
+        "ID",
+        "Title",
+        "Date",
+        "Location",
+        "Creator",
+        "Participants",
+      ];
       // Tạo các dòng dữ liệu
-      const rows = approvedEvents.map(e => {
+      const rows = approvedEvents.map((e) => {
         const date = new Date(e.startTime).toLocaleDateString();
         // Xử lý escape dấu phẩy và ngoặc kép
         const clean = (text: string) => `"${(text || "").replace(/"/g, '""')}"`;
@@ -246,7 +254,9 @@ export default function AdminDashboardPage() {
           clean(date),
           clean(e.location),
           clean(e.creator.name),
-          e.registrations.filter(r => r.status === "APPROVED" || r.status === "ATTENDED").length
+          e.registrations.filter(
+            (r) => r.status === "APPROVED" || r.status === "ATTENDED"
+          ).length,
         ].join(",");
       });
       content = [headers.join(","), ...rows].join("\n");
@@ -330,8 +340,10 @@ export default function AdminDashboardPage() {
             {currentView === "approved-events" ? (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h1 className="text-2xl font-bold text-emerald-700">Approved Events</h1>
-                  
+                  <h1 className="text-2xl font-bold text-emerald-700">
+                    Approved Events
+                  </h1>
+
                   {/* 3. DROPDOWN MENU EXPORT (Đã sửa item thứ 2 thành JSON) */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -367,7 +379,7 @@ export default function AdminDashboardPage() {
                         // Dùng onClick để xem chi tiết
                         onViewDetails={setSelectedEventId}
                         // Hiển thị tiếng Anh
-                        actionLabel="View Details" 
+                        actionLabel="View Details"
                       />
                     ))
                   )}

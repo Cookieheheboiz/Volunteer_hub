@@ -3,7 +3,11 @@
 import { EventCard } from "@/src/components/events/event-card";
 import { Badge } from "@/src/components/ui/badge";
 import { Card, CardContent } from "@/src/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/src/components/ui/avatar";
 import { Calendar, MapPin, Clock, Check, X, UserCheck } from "lucide-react";
 import type { Event, User } from "@/src/lib/types";
 
@@ -93,9 +97,18 @@ export function VolunteerDashboard({
               return (
                 <Card
                   key={event.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
                   onClick={() => onViewDetails(event.id)}
                 >
+                  {event.imageUrl && (
+                    <div className="w-full h-32 overflow-hidden bg-muted">
+                      <img
+                        src={event.imageUrl}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold line-clamp-1">

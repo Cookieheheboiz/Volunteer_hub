@@ -92,6 +92,26 @@ export default function Home() {
     }
   };
 
+  const handleGoogleLogin = async (token: string, role?: Role) => {
+    try {
+      const response = await authApi.googleLogin(token, role);
+      authApi.saveToken(response.token);
+
+      toast({
+        title: "Đăng nhập thành công",
+        description: `Chào mừng ${response.user.name}!`,
+      });
+
+      navigateByRole(response.user.role);
+    } catch (error: any) {
+      toast({
+        title: "Lỗi đăng nhập Google",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
@@ -109,11 +129,13 @@ export default function Home() {
       {showLogin ? (
         <LoginForm
           onLogin={handleLogin}
+          onGoogleLogin={handleGoogleLogin}
           onSwitchToSignup={() => setShowLogin(false)}
         />
       ) : (
         <SignupForm
           onSignup={handleSignup}
+          onGoogleLogin={handleGoogleLogin}
           onSwitchToLogin={() => setShowLogin(true)}
         />
       )}

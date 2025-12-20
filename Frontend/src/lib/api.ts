@@ -96,6 +96,28 @@ export const authApi = {
     }
   },
 
+  async googleLogin(token: string, role?: Role): Promise<LoginResponse> {
+    try {
+      const response = await fetch(`${API_URL}/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token, role }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Google login failed");
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async register(
     name: string,
     email: string,
@@ -170,6 +192,21 @@ export const authApi = {
       });
     } catch (error) {
       console.error("Error changing password:", error);
+      throw error;
+    }
+  },
+
+  async updateProfile(data: {
+    name: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    try {
+      return await fetchWithAuth(`${API_URL}/auth/profile`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
       throw error;
     }
   },
@@ -454,6 +491,7 @@ export const eventApi = {
     location: string;
     startTime: string;
     endTime: string;
+    imageUrl?: string;
   }): Promise<Event> {
     try {
       return await fetchWithAuth(`${API_URL}/events`, {
@@ -475,6 +513,7 @@ export const eventApi = {
       location: string;
       startTime: string;
       endTime: string;
+      imageUrl?: string;
     }
   ): Promise<Event> {
     try {
@@ -642,9 +681,12 @@ export const notificationApi = {
   // Đánh dấu một thông báo đã đọc
   async markAsRead(notificationId: string): Promise<Notification> {
     try {
-      return await fetchWithAuth(`${API_URL}/notifications/${notificationId}/read`, {
-        method: "PATCH",
-      });
+      return await fetchWithAuth(
+        `${API_URL}/notifications/${notificationId}/read`,
+        {
+          method: "PATCH",
+        }
+      );
     } catch (error) {
       console.error("Error marking notification as read:", error);
       throw error;
@@ -664,7 +706,9 @@ export const notificationApi = {
   },
 
   // Xóa thông báo
-  async deleteNotification(notificationId: string): Promise<{ message: string }> {
+  async deleteNotification(
+    notificationId: string
+  ): Promise<{ message: string }> {
     try {
       return await fetchWithAuth(`${API_URL}/notifications/${notificationId}`, {
         method: "DELETE",
@@ -673,5 +717,32 @@ export const notificationApi = {
       console.error("Error deleting notification:", error);
       throw error;
     }
+  },
+};
+
+export const uploadApi = {
+  upload: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = authApi.getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/upload`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Upload failed");
+    }
+
+    const data = await response.json();
+    return data.url;
   },
 };
