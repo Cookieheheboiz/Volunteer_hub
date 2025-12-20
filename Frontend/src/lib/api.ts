@@ -1,4 +1,4 @@
-import type { User, Role, Event, Post } from "./types";
+import type { User, Role, Event, Post, Notification } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -555,6 +555,21 @@ export const eventApi = {
       throw error;
     }
   },
+
+  // Đánh dấu hoàn thành sự kiện (EVENT_MANAGER)
+  async markAttended(eventId: string, userId: string): Promise<any> {
+    try {
+      return await fetchWithAuth(
+        `${API_URL}/events/${eventId}/registrations/${userId}/attended`,
+        {
+          method: "PATCH",
+        }
+      );
+    } catch (error) {
+      console.error("Error marking attended:", error);
+      throw error;
+    }
+  },
 };
 
 // ============ POST APIs (GỘP CẢ HAI) ============
@@ -607,6 +622,55 @@ export const postApi = {
       });
     } catch (error) {
       console.error("Error toggling like:", error);
+      throw error;
+    }
+  },
+};
+
+// API cho thông báo
+export const notificationApi = {
+  // Lấy danh sách thông báo
+  async getNotifications(): Promise<Notification[]> {
+    try {
+      return await fetchWithAuth(`${API_URL}/notifications`);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      throw error;
+    }
+  },
+
+  // Đánh dấu một thông báo đã đọc
+  async markAsRead(notificationId: string): Promise<Notification> {
+    try {
+      return await fetchWithAuth(`${API_URL}/notifications/${notificationId}/read`, {
+        method: "PATCH",
+      });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      throw error;
+    }
+  },
+
+  // Đánh dấu tất cả thông báo đã đọc
+  async markAllAsRead(): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/notifications/read-all`, {
+        method: "PATCH",
+      });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      throw error;
+    }
+  },
+
+  // Xóa thông báo
+  async deleteNotification(notificationId: string): Promise<{ message: string }> {
+    try {
+      return await fetchWithAuth(`${API_URL}/notifications/${notificationId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
       throw error;
     }
   },

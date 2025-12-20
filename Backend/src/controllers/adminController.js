@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const { Parser } = require("json2csv");
+const { createNotification } = require("../utils/notificationHelper");
 
 // ============ PHẦN CỦA MAIN (Dashboard Stats) ============
 // Lấy thống kê tổng quan cho admin dashboard
@@ -163,6 +164,23 @@ exports.toggleUserStatus = async (req, res) => {
       },
     });
 
+    // Tạo thông báo cho user
+    if (!updatedUser.isActive) {
+      await createNotification(
+        id,
+        "EVENT_APPROVED",
+        "Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ để biết thêm thông tin.",
+        null
+      );
+    } else {
+      await createNotification(
+        id,
+        "EVENT_APPROVED",
+        "Tài khoản của bạn đã được mở khóa. Bạn có thể tiếp tục sử dụng hệ thống.",
+        null
+      );
+    }
+
     res.json({
       message: updatedUser.isActive
         ? "Đã mở khóa tài khoản"
@@ -183,7 +201,14 @@ exports.approveEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const event = await prisma.event.findUnique({ where: { id } });
+    const event = await prisma.event.findUnique({ 
+      where: { id },
+      include: {
+        creator: {
+          select: { id: true, name: true }
+        }
+      }
+    });
     if (!event) {
       return res.status(404).json({ error: "Sự kiện không tồn tại" });
     }
@@ -192,6 +217,14 @@ exports.approveEvent = async (req, res) => {
       where: { id },
       data: { status: "APPROVED" },
     });
+
+    // Tạo thông báo cho Event Manager
+    await createNotification(
+      event.creatorId,
+      "EVENT_APPROVED",
+      `Sự kiện "${event.title}" của bạn đã được quản trị viên chấp nhận`,
+      `/manager/dashboard?eventId=${id}`
+    );
 
     res.json({
       message: "Đã duyệt sự kiện",
@@ -208,7 +241,14 @@ exports.rejectEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const event = await prisma.event.findUnique({ where: { id } });
+    const event = await prisma.event.findUnique({ 
+      where: { id },
+      include: {
+        creator: {
+          select: { id: true, name: true }
+        }
+      }
+    });
     if (!event) {
       return res.status(404).json({ error: "Sự kiện không tồn tại" });
     }
@@ -217,6 +257,14 @@ exports.rejectEvent = async (req, res) => {
       where: { id },
       data: { status: "REJECTED" },
     });
+
+    // Tạo thông báo cho Event Manager
+    await createNotification(
+      event.creatorId,
+      "EVENT_APPROVED",
+      `Sự kiện "${event.title}" của bạn đã bị quản trị viên từ chối`,
+      `/manager/dashboard?eventId=${id}`
+    );
 
     res.json({
       message: "Đã từ chối sự kiện",

@@ -81,4 +81,12 @@ router.patch(
   eventController.rejectRegistration
 );
 
+// PATCH /api/events/:id/registrations/:userId/attended - Đánh dấu hoàn thành
+router.patch(
+  "/:id/registrations/:userId/attended",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.markAttended
+);
+
 module.exports = router;
