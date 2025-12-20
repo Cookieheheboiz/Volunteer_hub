@@ -1,10 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { EventCard } from "@/src/components/events/event-card";
 import { Badge } from "@/src/components/ui/badge";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { Calendar, MapPin, Clock, Check, X, UserCheck } from "lucide-react";
+import { Input } from "@/src/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import { Calendar, MapPin, Clock, Check, X, UserCheck, Search, Filter } from "lucide-react";
 import type { Event, User } from "@/src/lib/types";
 
 interface VolunteerDashboardProps {
@@ -22,7 +31,26 @@ export function VolunteerDashboard({
   onViewDetails,
   onJoin,
 }: VolunteerDashboardProps) {
+  // 1. Thêm State cho Search và Sort
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"nearest" | "furthest">("nearest");
+
   const approvedEvents = events.filter((e) => e?.status === "APPROVED");
+
+  // 2. Logic lọc và sắp xếp cho tab Discover
+  const filteredEvents = approvedEvents
+    .filter((event) =>
+      event.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.startTime).getTime();
+      const dateB = new Date(b.startTime).getTime();
+      if (sortOrder === "nearest") {
+        return dateA - dateB; // Gần nhất trước
+      } else {
+        return dateB - dateA; // Xa nhất trước
+      }
+    });
 
   const myRegisteredEvents = events.filter((e) =>
     e.registrations?.some((r) => r.user.id === currentUser.id)
@@ -71,6 +99,7 @@ export function VolunteerDashboard({
     });
   };
 
+  // --- VIEW HISTORY (Giữ nguyên) ---
   if (currentView === "history") {
     return (
       <div>
@@ -136,18 +165,54 @@ export function VolunteerDashboard({
     );
   }
 
+  // --- VIEW DISCOVER (Đã cập nhật Search & Filter) ---
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Discover Events</h1>
-      {approvedEvents.length === 0 ? (
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Discover Events</h1>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {/* Thanh tìm kiếm */}
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search event name..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Bộ lọc thời gian */}
+          <Select
+            value={sortOrder}
+            onValueChange={(value: "nearest" | "furthest") => setSortOrder(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
+              <SelectValue placeholder="Sort by date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nearest">Nearest First</SelectItem>
+              <SelectItem value="furthest">Furthest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Hiển thị danh sách đã lọc (filteredEvents) thay vì approvedEvents */}
+      {filteredEvents.length === 0 ? (
         <div className="bg-muted/50 rounded-lg p-8 text-center">
           <p className="text-muted-foreground">
-            No events available at the moment.
+            {searchQuery
+              ? "No events found matching your search."
+              : "No events available at the moment."}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {approvedEvents.map((event) => (
+          {filteredEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
