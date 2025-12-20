@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/src/components/layout/navbar";
 import { Sidebar } from "@/src/components/layout/sidebar";
 // Giữ nguyên component AdminDashboard cũ để xử lý các tab cũ
-import { AdminDashboard } from "@/src/components/dashboard/admin-dashboard";
+import { AdminDashboard } from "@/src/components/dashboard/admin-dashboard"; 
 import { EventDetail } from "@/src/components/events/event-detail";
 // Import thêm EventCard
-import { EventCard } from "@/src/components/events/event-card";
-// 1. IMPORT CÁC ICON VÀ DROPDOWN MENU CẦN THIẾT
-import { FileSpreadsheet, Download, ChevronDown, FileJson } from "lucide-react"; // Thêm icon FileJson
+import { EventCard } from "@/src/components/events/event-card"; 
+// 1. IMPORT THÊM SEARCH ICON VÀ INPUT
+import { FileSpreadsheet, Download, ChevronDown, FileJson, Search } from "lucide-react"; 
+import { Input } from "@/src/components/ui/input"; // Import Input
 import { Button } from "@/src/components/ui/button";
 import {
   DropdownMenu,
@@ -40,12 +41,12 @@ export default function AdminDashboardPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-
+  
   // State view hiện tại
   const [currentView, setCurrentView] = useState("overview");
-
-  const [notifications, setNotifications] =
-    useState<Notification[]>(mockNotifications);
+  const [searchQuery, setSearchQuery] = useState(""); // 2. STATE TÌM KIẾM
+  
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -206,9 +207,8 @@ export default function AdminDashboardPage() {
     router.push("/");
   };
 
-  // --- 2. CẬP NHẬT HÀM XỬ LÝ EXPORT ĐỂ TẢI FILE THẬT ---
+  // 2. HÀM XỬ LÝ EXPORT CHO DROPDOWN
   const handleExport = (type: "csv" | "json") => {
-    // Chỉ lấy các sự kiện đã duyệt
     const approvedEvents = events.filter((e) => e.status === "APPROVED");
 
     if (approvedEvents.length === 0) {
@@ -222,31 +222,19 @@ export default function AdminDashboardPage() {
 
     const timestamp = new Date().toISOString().split("T")[0];
     const fileName = `approved_events_${timestamp}`;
-
+    
     let content = "";
     let mimeType = "";
     let extension = "";
 
     if (type === "json") {
-      // Logic xuất JSON
       content = JSON.stringify(approvedEvents, null, 2);
       mimeType = "application/json";
       extension = "json";
     } else {
-      // Logic xuất CSV
-      // Tạo header
-      const headers = [
-        "ID",
-        "Title",
-        "Date",
-        "Location",
-        "Creator",
-        "Participants",
-      ];
-      // Tạo các dòng dữ liệu
-      const rows = approvedEvents.map((e) => {
+      const headers = ["ID", "Title", "Date", "Location", "Creator", "Participants"];
+      const rows = approvedEvents.map(e => {
         const date = new Date(e.startTime).toLocaleDateString();
-        // Xử lý escape dấu phẩy và ngoặc kép
         const clean = (text: string) => `"${(text || "").replace(/"/g, '""')}"`;
         return [
           clean(e.id),
@@ -254,9 +242,7 @@ export default function AdminDashboardPage() {
           clean(date),
           clean(e.location),
           clean(e.creator.name),
-          e.registrations.filter(
-            (r) => r.status === "APPROVED" || r.status === "ATTENDED"
-          ).length,
+          e.registrations.filter(r => r.status === "APPROVED" || r.status === "ATTENDED").length
         ].join(",");
       });
       content = [headers.join(","), ...rows].join("\n");
@@ -264,7 +250,6 @@ export default function AdminDashboardPage() {
       extension = "csv";
     }
 
-    // Tạo thẻ A ẩn để kích hoạt tải xuống
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -290,18 +275,19 @@ export default function AdminDashboardPage() {
   }
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
-  const approvedEvents = events.filter((e) => e.status === "APPROVED");
+  
+  // 3. LOGIC LỌC: CHỈ LẤY APPROVED & KẾT HỢP TÌM KIẾM
+  const approvedEvents = events
+    .filter((e) => e.status === "APPROVED")
+    .filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar
         user={currentUser}
-        notifications={notifications}
         sidebarOpen={sidebarOpen}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onLogout={handleLogout}
-        onDeleteNotification={() => {}}
-        onMarkAllNotificationsRead={() => {}}
       />
 
       <Sidebar
@@ -329,7 +315,6 @@ export default function AdminDashboardPage() {
             onApproveRegistration={() => {}}
             onRejectRegistration={() => {}}
             onMarkAttended={() => {}}
-            // Truyền props admin để có thể duyệt/từ chối ngay trong chi tiết nếu cần
             isAdmin={true}
             onApproveEvent={() => handleApproveEvent(selectedEvent.id)}
             onRejectEvent={() => handleRejectEvent(selectedEvent.id)}
@@ -340,36 +325,51 @@ export default function AdminDashboardPage() {
             {currentView === "approved-events" ? (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h1 className="text-2xl font-bold text-emerald-700">
-                    Approved Events
-                  </h1>
+                  <h1 className="text-2xl font-bold text-emerald-700">Approved Events</h1>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      {/* 4. THANH TÌM KIẾM MỚI */}
+                      <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search approved events..."
+                          className="pl-9 bg-background"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
 
-                  {/* 3. DROPDOWN MENU EXPORT (Đã sửa item thứ 2 thành JSON) */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Export Data
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleExport("csv")}>
-                        <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Export as CSV
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExport("json")}>
-                        <FileJson className="mr-2 h-4 w-4" />
-                        Export as JSON
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      {/* 3. DROPDOWN MENU EXPORT */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="gap-2">
+                            <Download className="h-4 w-4" />
+                            Export Data
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleExport("csv")}>
+                            <FileSpreadsheet className="mr-2 h-4 w-4" />
+                            Export as CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleExport("json")}>
+                            <FileJson className="mr-2 h-4 w-4" />
+                            Export as JSON
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {approvedEvents.length === 0 ? (
                     <div className="col-span-full text-center py-12 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
-                      <p>No approved events found.</p>
+                      <p>
+                        {searchQuery 
+                          ? `No approved events found matching "${searchQuery}"`
+                          : "No approved events found."}
+                      </p>
                     </div>
                   ) : (
                     approvedEvents.map((event) => (
@@ -379,7 +379,7 @@ export default function AdminDashboardPage() {
                         // Dùng onClick để xem chi tiết
                         onViewDetails={setSelectedEventId}
                         // Hiển thị tiếng Anh
-                        actionLabel="View Details"
+                        actionLabel="View Details" 
                       />
                     ))
                   )}

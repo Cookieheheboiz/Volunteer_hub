@@ -47,10 +47,18 @@ export function VolunteerOverview({
     )
   );
 
-  const totalHours = completedEvents.length * 3.5; // Mock: ~3.5 hours per event
-  const eventsJoined = myRegistrations.length;
-  const impactScore =
-    completedEvents.length * 100 + myRegistrations.length * 20;
+  // Tính tổng giờ dựa trên thời gian thực của sự kiện (endTime - startTime)
+  const totalHours = completedEvents.reduce((total, event) => {
+    const start = new Date(event.startTime).getTime();
+    const end = new Date(event.endTime).getTime();
+
+    // Tính khoảng thời gian (mili giây) và đổi sang giờ
+    const durationInHours = (end - start) / (1000 * 60 * 60);
+
+    return total + (durationInHours > 0 ? durationInHours : 0);
+  }, 0);
+  const eventsJoined = myRegistrations.length
+  const impactScore = completedEvents.length * 100 + myRegistrations.length * 20
 
   // Get approved events for New & Noteworthy
   const approvedEvents = events.filter((e) => e.status === "APPROVED");
@@ -69,13 +77,19 @@ export function VolunteerOverview({
           Date.now() - 48 * 60 * 60 * 1000; // Last 48 hours
       return { event, latestPost, hasRecentPost };
     })
-    .filter(
-      (item) =>
-        item.hasRecentPost ||
-        new Date(item.event.startTime).getTime() >
-          Date.now() - 7 * 24 * 60 * 60 * 1000
-    ) // Also include newly created events
-    .slice(0, 4);
+    // --- PHẦN ĐÃ SỬA ---
+    .filter((item) => {
+      // 1. Kiểm tra sự kiện CHƯA kết thúc (endTime phải lớn hơn hiện tại)
+      const isNotEnded = new Date(item.event.endTime).getTime() > Date.now();
+
+      // 2. Logic cũ: Có bài đăng mới hoặc là sự kiện mới
+      const isRelevant = item.hasRecentPost || new Date(item.event.startTime).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+      // Chỉ lấy sự kiện thỏa mãn cả 2 điều kiện
+      return isNotEnded && isRelevant;
+    })
+    // -------------------
+    .slice(0, 4)
 
   // Calculate trending events based on engagement
   const trendingEvents = approvedEvents
