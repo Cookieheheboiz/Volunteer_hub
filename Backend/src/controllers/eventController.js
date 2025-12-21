@@ -673,3 +673,99 @@ exports.markAttended = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi đánh dấu hoàn thành" });
   }
 };
+
+// Export CSV danh sách người đăng ký sự kiện (EVENT_MANAGER)
+exports.exportEventRegistrationsCSV = async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+    const managerId = req.user.userId;
+    const { status } = req.query; // Filter by status if needed
+
+    // Kiểm tra event có tồn tại và thuộc quyền quản lý của manager này
+    const event = await prisma.event.findFirst({
+      where: {
+        id: eventId,
+        creatorId: managerId,
+      },
+      include: {
+        registrations: {
+          where: status ? { status } : {},
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found or unauthorized" });
+    }
+
+    // Tạo CSV content
+    const csvHeaders = [
+      "Volunteer Name",
+      "Email",
+      "Registration Date",
+      "Status",
+      "Last Updated"
+    ];
+
+    const csvRows = event.registrations.map((reg) => {
+      const registrationDate = new Date(reg.createdAt).toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const updatedDate = new Date(reg.updatedAt).toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // Escape special characters for CSV
+      const escape = (text) => {
+        if (text === null || text === undefined) return '';
+        const str = String(text);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      return [
+        escape(reg.user.name),
+        escape(reg.user.email),
+        escape(registrationDate),
+        escape(reg.status),
+        escape(updatedDate),
+      ].join(',');
+    });
+
+    const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+
+    // Set headers for file download
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fileName = `${event.title.replace(/[^a-z0-9]/gi, '_')}_registrations_${timestamp}.csv`;
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    
+    // Add BOM for Excel UTF-8 support
+    res.send('\uFEFF' + csvContent);
+  } catch (error) {
+    console.error("Error exporting registrations CSV:", error);
+    res.status(500).json({ error: "Lỗi khi xuất file CSV" });
+  }
+};

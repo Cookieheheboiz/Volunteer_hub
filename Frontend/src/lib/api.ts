@@ -609,6 +609,34 @@ export const eventApi = {
       throw error;
     }
   },
+
+  // Export danh sách registrations ra CSV (EVENT_MANAGER)
+  async exportEventRegistrationsCSV(
+    eventId: string,
+    status?: string
+  ): Promise<Blob> {
+    try {
+      const token = authApi.getToken();
+      const queryParams = status ? `?status=${status}` : "";
+      const response = await fetch(
+        `${API_URL}/events/${eventId}/registrations/export/csv${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export registrations");
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error("Error exporting registrations CSV:", error);
+      throw error;
+    }
+  },
 };
 
 // ============ POST APIs (GỘP CẢ HAI) ============

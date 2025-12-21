@@ -34,7 +34,7 @@ import {
 import { Badge } from "@/src/components/ui/badge";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Input } from "@/src/components/ui/input";
-import { uploadApi } from "@/src/lib/api";
+import { uploadApi, eventApi } from "@/src/lib/api";
 import {
   Tabs,
   TabsContent,
@@ -241,8 +241,30 @@ export function EventDetail({
     }
   };
 
-  const handleExportReport = () => {
-    alert(`Downloading participation report for "${event.title}"...`);
+  const handleExportReport = async () => {
+    try {
+      // Get filter status if any
+      const statusFilter = reportFilter !== "ALL" ? reportFilter : undefined;
+      
+      const blob = await eventApi.exportEventRegistrationsCSV(
+        event.id,
+        statusFilter
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const timestamp = new Date().toISOString().split("T")[0];
+      a.download = `${event.title.replace(/[^a-z0-9]/gi, "_")}_registrations_${timestamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to export report:", error);
+      alert("Failed to export report. Please try again.");
+    }
   };
 
   return (
