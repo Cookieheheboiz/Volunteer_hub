@@ -63,7 +63,7 @@ exports.markAllAsRead = async (req, res) => {
       },
     });
 
-    res.json({ message: "Đã đánh dấu tất cả thông báo là đã đọc" });
+    res.json({ message: "All notifications marked as read" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi cập nhật thông báo" });
@@ -92,7 +92,7 @@ exports.deleteNotification = async (req, res) => {
       where: { id },
     });
 
-    res.json({ message: "Đã xóa thông báo" });
+    res.json({ message: "Notification deleted" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi xóa thông báo" });

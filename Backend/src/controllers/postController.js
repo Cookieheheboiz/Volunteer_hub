@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-const { createNotification } = require("../utils/notificationHelper");
+const { createNotification, createBulkNotifications } = require("../utils/notificationHelper");
 
 exports.createPost = async (req, res) => {
   try {
@@ -10,6 +10,16 @@ exports.createPost = async (req, res) => {
     // Kiểm tra sự kiện có tồn tại không
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        registrations: {
+          where: {
+            status: { in: ["APPROVED", "ATTENDED"] }, // Chỉ gửi cho người đã được duyệt
+          },
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -30,6 +40,20 @@ exports.createPost = async (req, res) => {
         },
       },
     });
+
+    // Gửi thông báo cho tất cả người đã đăng ký sự kiện (trừ tác giả)
+    const registeredUserIds = event.registrations
+      .map((reg) => reg.userId)
+      .filter((userId) => userId !== authorId); // Không gửi cho chính mình
+
+    if (registeredUserIds.length > 0) {
+      await createBulkNotifications(
+        registeredUserIds,
+        "NEW_POST",
+        `${post.author.name} has posted in the event "${event.title}"`,
+        `/events/${eventId}`
+      );
+    }
 
     res.status(201).json({ ...post, likedBy: [], comments: [] });
   } catch (error) {
@@ -118,7 +142,7 @@ exports.addComment = async (req, res) => {
       await createNotification(
         post.authorId,
         "NEW_COMMENT",
-        `${comment.author.name} đã bình luận vào bài viết của bạn`,
+        `${comment.author.name} has commented on your post`,
         `/post/${postId}`
       );
     }
@@ -171,7 +195,7 @@ exports.toggleLike = async (req, res) => {
         },
       });
 
-      return res.json({ message: "Đã bỏ thích" });
+      return res.json({ message: "Unliked" });
     } else {
       // Nếu chưa like thì tạo like mới
       const like = await prisma.postLike.create({
@@ -192,12 +216,12 @@ exports.toggleLike = async (req, res) => {
         await createNotification(
           post.authorId,
           "POST_LIKE",
-          `${user.name} đã thích bài viết của bạn`,
+          `${user.name} liked your post`,
           `/post/${postId}`
         );
       }
 
-      return res.status(201).json({ message: "Đã thích", like });
+      return res.status(201).json({ message: "Liked", like });
     }
   } catch (error) {
     console.error(error);

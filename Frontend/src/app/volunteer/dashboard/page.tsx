@@ -79,13 +79,13 @@ export default function VolunteerDashboardPage() {
       await postApi.createPost(selectedEventId, content, imageUrl);
       await loadPosts(selectedEventId);
       toast({
-        title: "Đã đăng bài",
-        description: "Bài viết của bạn đã được chia sẻ.",
+        title: "Post Created",
+        description: "Your post has been shared.",
       });
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể đăng bài",
+        title: "Error",
+        description: error.message || "Unable to create post",
         variant: "destructive",
       });
     }
@@ -114,13 +114,13 @@ export default function VolunteerDashboardPage() {
       await eventApi.registerForEvent(eventId);
       await loadEvents();
       toast({
-        title: "Đăng ký thành công",
-        description: "Yêu cầu của bạn đã được gửi.",
+        title: "Registration Successful",
+        description: "Your request has been sent.",
       });
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể đăng ký sự kiện",
+        title: "Error",
+        description: error.message || "Unable to register for event",
         variant: "destructive",
       });
     }
@@ -131,13 +131,13 @@ export default function VolunteerDashboardPage() {
       await eventApi.cancelRegistration(eventId);
       await loadEvents();
       toast({
-        title: "Đã hủy đăng ký",
-        description: "Bạn đã hủy đăng ký tham gia sự kiện.",
+        title: "Registration Cancelled",
+        description: "You have cancelled your registration.",
       });
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể hủy đăng ký",
+        title: "Error",
+        description: error.message || "Unable to cancel registration",
         variant: "destructive",
       });
     }

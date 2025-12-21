@@ -60,8 +60,8 @@ export default function Home() {
       authApi.saveToken(response.token);
 
       toast({
-        title: "Đăng nhập thành công",
-        description: `Chào mừng ${response.user.name}!`,
+        title: "Login Successful",
+        description: `Welcome ${response.user.name}!`,
       });
 
       navigateByRole(response.user.role);
@@ -82,8 +82,8 @@ export default function Home() {
       authApi.saveToken(loginResponse.token);
 
       toast({
-        title: "Đăng ký thành công",
-        description: `Chào mừng ${name} đến với VolunteerHub!`,
+        title: "Registration Successful",
+        description: `Welcome ${name} to VolunteerHub!`,
       });
 
       navigateByRole(role);
@@ -98,14 +98,14 @@ export default function Home() {
       authApi.saveToken(response.token);
 
       toast({
-        title: "Đăng nhập thành công",
-        description: `Chào mừng ${response.user.name}!`,
+        title: "Login Successful",
+        description: `Welcome ${response.user.name}!`,
       });
 
       navigateByRole(response.user.role);
     } catch (error: any) {
       toast({
-        title: "Lỗi đăng nhập Google",
+        title: "Google Login Error",
         description: error.message,
         variant: "destructive",
       });

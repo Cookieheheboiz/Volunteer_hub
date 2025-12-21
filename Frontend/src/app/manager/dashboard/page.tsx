@@ -77,13 +77,13 @@ export default function ManagerDashboardPage() {
       await postApi.createPost(selectedEventId, content, imageUrl);
       await loadPosts(selectedEventId);
       toast({
-        title: "Đã đăng bài",
-        description: "Bài viết của bạn đã được chia sẻ.",
+        title: "Post Created",
+        description: "Your post has been shared.",
       });
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể đăng bài",
+        title: "Error",
+        description: error.message || "Unable to create post",
         variant: "destructive",
       });
     }
@@ -111,14 +111,14 @@ export default function ManagerDashboardPage() {
     try {
       await eventApi.approveRegistration(eventId, userId);
       toast({
-        title: "Thành công",
-        description: "Đã duyệt đăng ký.",
+        title: "Success",
+        description: "Registration has been approved.",
       });
       loadEvents();
     } catch (error) {
       toast({
-        title: "Lỗi",
-        description: "Không thể duyệt đăng ký.",
+        title: "Error",
+        description: "Unable to approve registration.",
         variant: "destructive",
       });
     }
@@ -128,14 +128,14 @@ export default function ManagerDashboardPage() {
     try {
       await eventApi.rejectRegistration(eventId, userId);
       toast({
-        title: "Thành công",
-        description: "Đã từ chối đăng ký.",
+        title: "Success",
+        description: "Registration has been rejected.",
       });
       loadEvents();
     } catch (error) {
       toast({
-        title: "Lỗi",
-        description: "Không thể từ chối đăng ký.",
+        title: "Error",
+        description: "Unable to reject registration.",
         variant: "destructive",
       });
     }
@@ -145,14 +145,14 @@ export default function ManagerDashboardPage() {
     try {
       await eventApi.markAttended(eventId, userId);
       toast({
-        title: "Thành công",
-        description: "Đã xác nhận hoàn thành sự kiện cho tình nguyện viên.",
+        title: "Success",
+        description: "Event completion confirmed for the volunteer.",
       });
       loadEvents();
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể xác nhận hoàn thành.",
+        title: "Error",
+        description: error.message || "Unable to confirm completion.",
         variant: "destructive",
       });
     }
@@ -163,14 +163,14 @@ export default function ManagerDashboardPage() {
       if (editingEvent) {
         await eventApi.updateEvent(editingEvent.id, eventData);
         toast({
-          title: "Cập nhật sự kiện thành công",
-          description: "Thông tin sự kiện đã được cập nhật.",
+          title: "Event Updated",
+          description: "Event information has been updated.",
         });
       } else {
         await eventApi.createEvent(eventData);
         toast({
-          title: "Tạo sự kiện thành công",
-          description: "Sự kiện đang chờ duyệt.",
+          title: "Event Created",
+          description: "Event is pending approval.",
         });
       }
       await loadEvents();
@@ -178,7 +178,7 @@ export default function ManagerDashboardPage() {
       setEditingEvent(null);
     } catch (error: any) {
       toast({
-        title: "Lỗi",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -189,15 +189,15 @@ export default function ManagerDashboardPage() {
     try {
       await eventApi.deleteEvent(eventId);
       toast({
-        title: "Xóa sự kiện thành công",
-        description: "Sự kiện đã được xóa khỏi hệ thống.",
+        title: "Event Deleted",
+        description: "Event has been removed from the system.",
       });
       setSelectedEventId(null);
       loadEvents();
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể xóa sự kiện",
+        title: "Error",
+        description: error.message || "Unable to delete event",
         variant: "destructive",
       });
     }

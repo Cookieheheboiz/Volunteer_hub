@@ -118,13 +118,13 @@ export default function AdminDashboardPage() {
       await postApi.createPost(selectedEventId, content);
       await loadPosts(selectedEventId);
       toast({
-        title: "Đã đăng bài",
-        description: "Bài viết của bạn đã được chia sẻ.",
+        title: "Post Created",
+        description: "Your post has been shared.",
       });
     } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error.message || "Không thể đăng bài",
+        title: "Error",
+        description: error.message || "Unable to create post",
         variant: "destructive",
       });
     }
@@ -152,15 +152,15 @@ export default function AdminDashboardPage() {
     try {
       await adminApi.approveEvent(eventId);
       toast({
-        title: "Thành công",
-        description: "Đã duyệt sự kiện",
+        title: "Success",
+        description: "Event has been approved",
       });
       loadEvents();
       loadStats();
     } catch (error) {
       toast({
-        title: "Lỗi",
-        description: "Không thể duyệt sự kiện",
+        title: "Error",
+        description: "Unable to approve event",
         variant: "destructive",
       });
     }
@@ -170,15 +170,15 @@ export default function AdminDashboardPage() {
     try {
       await adminApi.rejectEvent(eventId);
       toast({
-        title: "Thành công",
-        description: "Đã từ chối sự kiện",
+        title: "Success",
+        description: "Event has been rejected",
       });
       loadEvents();
       loadStats();
     } catch (error) {
       toast({
-        title: "Lỗi",
-        description: "Không thể từ chối sự kiện",
+        title: "Error",
+        description: "Unable to reject event",
         variant: "destructive",
       });
     }
@@ -188,15 +188,15 @@ export default function AdminDashboardPage() {
     try {
       const result = await adminApi.toggleUserStatus(userId);
       toast({
-        title: "Thành công",
+        title: "Success",
         description: result.message,
       });
       await Promise.all([loadUsers(), loadStats()]);
     } catch (error: any) {
       console.error("Toggle user status error:", error);
       toast({
-        title: "Lỗi",
-        description: error?.message || "Không thể cập nhật trạng thái user",
+        title: "Error",
+        description: error?.message || "Unable to update user status",
         variant: "destructive",
       });
     }
