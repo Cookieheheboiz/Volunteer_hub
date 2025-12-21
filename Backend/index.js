@@ -8,7 +8,7 @@ const eventRoutes = require("./src/routes/eventRoutes");
 const postRoutes = require("./src/routes/postRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
-// const uploadRoutes = require("./src/routes/uploadRoutes");
+const uploadRoutes = require("./src/routes/uploadRoutes");
 const path = require("path");
 
 const app = express();
