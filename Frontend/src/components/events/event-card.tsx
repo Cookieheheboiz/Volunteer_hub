@@ -38,17 +38,20 @@ export function EventCard({
   ).length;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("vi-VN", {
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
+    return new Date(dateString).toLocaleTimeString("vi-VN", {
       hour: "numeric",
       minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   };
 
