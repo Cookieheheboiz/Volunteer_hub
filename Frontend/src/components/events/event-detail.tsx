@@ -133,7 +133,7 @@ export function EventDetail({
   const now = new Date();
   const startTime = new Date(event.startTime);
   const endTime = new Date(event.endTime);
-  
+
   let eventTimeStatus: "upcoming" | "ongoing" | "past" = "upcoming";
   if (now >= endTime) {
     eventTimeStatus = "past";
@@ -219,6 +219,7 @@ export function EventDetail({
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   };
 
@@ -245,7 +246,7 @@ export function EventDetail({
     try {
       // Get filter status if any
       const statusFilter = reportFilter !== "ALL" ? reportFilter : undefined;
-      
+
       const blob = await eventApi.exportEventRegistrationsCSV(
         event.id,
         statusFilter
@@ -256,7 +257,10 @@ export function EventDetail({
       const a = document.createElement("a");
       a.href = url;
       const timestamp = new Date().toISOString().split("T")[0];
-      a.download = `${event.title.replace(/[^a-z0-9]/gi, "_")}_registrations_${timestamp}.csv`;
+      a.download = `${event.title.replace(
+        /[^a-z0-9]/gi,
+        "_"
+      )}_registrations_${timestamp}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -380,12 +384,18 @@ export function EventDetail({
                     {event.status}
                   </Badge>
                   {eventTimeStatus === "upcoming" && (
-                    <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge
+                      variant="outline"
+                      className="ml-2 bg-blue-50 text-blue-700 border-blue-200"
+                    >
                       Upcoming
                     </Badge>
                   )}
                   {eventTimeStatus === "ongoing" && (
-                    <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">
+                    <Badge
+                      variant="outline"
+                      className="ml-2 bg-green-50 text-green-700 border-green-200"
+                    >
                       Ongoing
                     </Badge>
                   )}

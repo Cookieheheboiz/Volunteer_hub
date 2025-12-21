@@ -11,7 +11,7 @@ const mapRegistrations = (registrations) => {
     ...reg,
     // Sử dụng updatedAt cho các đăng ký đã được duyệt (ngày duyệt)
     // Sử dụng createdAt cho đăng ký đang pending (ngày đăng ký)
-    registeredAt: reg.status === 'PENDING' ? reg.createdAt : reg.updatedAt,
+    registeredAt: reg.status === "PENDING" ? reg.createdAt : reg.updatedAt,
   }));
 };
 
@@ -206,7 +206,7 @@ exports.createEvent = async (req, res) => {
             avatarUrl: true,
           },
         },
-        // ✅ THÊM registrations để trả về array rỗng thay vì undefined
+        // Thêm registrations để trả về array rỗng thay vì undefined
         registrations: {
           include: {
             user: {
@@ -410,7 +410,12 @@ exports.registerEvent = async (req, res) => {
       registeredAt: registration.createdAt,
     };
 
-    res.status(201).json({ message: "Đăng ký thành công", registration: mappedRegistration });
+    res
+      .status(201)
+      .json({
+        message: "Đăng ký thành công",
+        registration: mappedRegistration,
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi đăng ký sự kiện" });
@@ -532,7 +537,10 @@ exports.approveRegistration = async (req, res) => {
       registeredAt: registration.createdAt,
     };
 
-    res.json({ message: "Registration approved", registration: mappedRegistration });
+    res.json({
+      message: "Registration approved",
+      registration: mappedRegistration,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi duyệt đăng ký" });
@@ -589,7 +597,10 @@ exports.rejectRegistration = async (req, res) => {
       registeredAt: registration.createdAt,
     };
 
-    res.json({ message: "Registration rejected", registration: mappedRegistration });
+    res.json({
+      message: "Registration rejected",
+      registration: mappedRegistration,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi từ chối đăng ký" });
@@ -667,7 +678,10 @@ exports.markAttended = async (req, res) => {
       registeredAt: registration.createdAt,
     };
 
-    res.json({ message: "Completion confirmed", registration: mappedRegistration });
+    res.json({
+      message: "Completion confirmed",
+      registration: mappedRegistration,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi đánh dấu hoàn thành" });
@@ -715,30 +729,30 @@ exports.exportEventRegistrationsCSV = async (req, res) => {
       "Email",
       "Registration Date",
       "Status",
-      "Last Updated"
+      "Last Updated",
     ];
 
     const csvRows = event.registrations.map((reg) => {
-      const registrationDate = new Date(reg.createdAt).toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
+      const registrationDate = new Date(reg.createdAt).toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       });
-      const updatedDate = new Date(reg.updatedAt).toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
+      const updatedDate = new Date(reg.updatedAt).toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       });
 
       // Escape special characters for CSV
       const escape = (text) => {
-        if (text === null || text === undefined) return '';
+        if (text === null || text === undefined) return "";
         const str = String(text);
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
           return `"${str.replace(/"/g, '""')}"`;
         }
         return str;
@@ -750,20 +764,23 @@ exports.exportEventRegistrationsCSV = async (req, res) => {
         escape(registrationDate),
         escape(reg.status),
         escape(updatedDate),
-      ].join(',');
+      ].join(",");
     });
 
-    const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+    const csvContent = [csvHeaders.join(","), ...csvRows].join("\n");
 
     // Set headers for file download
-    const timestamp = new Date().toISOString().split('T')[0];
-    const fileName = `${event.title.replace(/[^a-z0-9]/gi, '_')}_registrations_${timestamp}.csv`;
-    
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    
+    const timestamp = new Date().toISOString().split("T")[0];
+    const fileName = `${event.title.replace(
+      /[^a-z0-9]/gi,
+      "_"
+    )}_registrations_${timestamp}.csv`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
     // Add BOM for Excel UTF-8 support
-    res.send('\uFEFF' + csvContent);
+    res.send("\uFEFF" + csvContent);
   } catch (error) {
     console.error("Error exporting registrations CSV:", error);
     res.status(500).json({ error: "Lỗi khi xuất file CSV" });

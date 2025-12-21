@@ -105,7 +105,7 @@ exports.changePassword = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 2. Kiểm tra mật khẩu cũ (Dùng passwordHash thay vì password)
+    // 2. Kiểm tra mật khẩu cũ
     const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
       return res.status(400).json({ error: "Current password is incorrect" });
@@ -115,7 +115,7 @@ exports.changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // 4. Cập nhật vào DB (Cập nhật cột passwordHash)
+    // 4. Cập nhật vào DB
     await prisma.user.update({
       where: { id: userId },
       data: { passwordHash: hashedPassword },
@@ -165,7 +165,7 @@ exports.googleLogin = async (req, res) => {
     let user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      // Validate role if provided, otherwise default to VOLUNTEER
+      // Kiểm tra xem nếu được cung cấp vai trò hợp lệ thì sẽ được tạo ứng với vai trò đó, không mặc định là VOLUNTEER
       const userRole = ["VOLUNTEER", "EVENT_MANAGER"].includes(role)
         ? role
         : "VOLUNTEER";
