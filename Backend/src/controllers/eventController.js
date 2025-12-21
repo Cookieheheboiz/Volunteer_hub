@@ -4,6 +4,26 @@ const {
   createBulkNotifications,
 } = require("../utils/notificationHelper");
 
+// Helper function để map registrations
+const mapRegistrations = (registrations) => {
+  if (!registrations) return [];
+  return registrations.map((reg) => ({
+    ...reg,
+    // Sử dụng updatedAt cho các đăng ký đã được duyệt (ngày duyệt)
+    // Sử dụng createdAt cho đăng ký đang pending (ngày đăng ký)
+    registeredAt: reg.status === 'PENDING' ? reg.createdAt : reg.updatedAt,
+  }));
+};
+
+// Helper function để map event với registrations
+const mapEventWithRegistrations = (event) => {
+  if (!event) return null;
+  return {
+    ...event,
+    registrations: mapRegistrations(event.registrations),
+  };
+};
+
 // Lấy tất cả sự kiện đã được duyệt
 exports.getAllEvents = async (req, res) => {
   try {
@@ -33,7 +53,8 @@ exports.getAllEvents = async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    res.json(events);
+    const mappedEvents = events.map(mapEventWithRegistrations);
+    res.json(mappedEvents);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện" });
@@ -68,7 +89,8 @@ exports.getAllEventsForAdmin = async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    res.json(events);
+    const mappedEvents = events.map(mapEventWithRegistrations);
+    res.json(mappedEvents);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện cho admin" });
@@ -105,7 +127,8 @@ exports.getMyEvents = async (req, res) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    res.json(events);
+    const mappedEvents = events.map(mapEventWithRegistrations);
+    res.json(mappedEvents);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi lấy danh sách sự kiện của bạn" });
@@ -148,7 +171,8 @@ exports.getEventById = async (req, res) => {
         .json({ error: "Sự kiện không tồn tại hoặc chưa được duyệt" });
     }
 
-    res.json(event);
+    const mappedEvent = mapEventWithRegistrations(event);
+    res.json(mappedEvent);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi lấy chi tiết sự kiện" });
@@ -209,12 +233,13 @@ exports.createEvent = async (req, res) => {
       await createBulkNotifications(
         adminIds,
         "EVENT_PENDING",
-        `Sự kiện mới "${title}" đang chờ duyệt`,
+        `New event "${title}" is pending approval`,
         `/admin/events/${event.id}`
       );
     }
 
-    res.status(201).json(event);
+    const mappedEvent = mapEventWithRegistrations(event);
+    res.status(201).json(mappedEvent);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi tạo sự kiện" });
@@ -278,7 +303,8 @@ exports.updateEvent = async (req, res) => {
       },
     });
 
-    res.json(updatedEvent);
+    const mappedEvent = mapEventWithRegistrations(updatedEvent);
+    res.json(mappedEvent);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi cập nhật sự kiện" });
@@ -375,11 +401,16 @@ exports.registerEvent = async (req, res) => {
     await createNotification(
       event.creatorId,
       "NEW_REGISTRATION",
-      `${registration.user.name} đã đăng ký tham gia sự kiện "${event.title}"`,
+      `${registration.user.name} has registered for the event "${event.title}"`,
       `/manager/dashboard?eventId=${eventId}`
     );
 
-    res.status(201).json({ message: "Đăng ký thành công", registration });
+    const mappedRegistration = {
+      ...registration,
+      registeredAt: registration.createdAt,
+    };
+
+    res.status(201).json({ message: "Đăng ký thành công", registration: mappedRegistration });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi đăng ký sự kiện" });
@@ -441,7 +472,7 @@ exports.cancelRegistration = async (req, res) => {
     await createNotification(
       event.creatorId,
       "CANCELLED_REGISTRATION",
-      `${user.name} đã hủy đăng ký tham gia sự kiện "${event.title}"`,
+      `${user.name} has cancelled their registration for the event "${event.title}"`,
       `/manager/dashboard?eventId=${eventId}`
     );
 
@@ -492,11 +523,16 @@ exports.approveRegistration = async (req, res) => {
     await createNotification(
       userId,
       "EVENT_APPROVED",
-      `Đơn đăng ký của bạn cho sự kiện "${event.title}" đã được chấp nhận`,
+      `Your registration for the event "${event.title}" has been approved`,
       `/volunteer/dashboard?eventId=${eventId}`
     );
 
-    res.json({ message: "Đã duyệt đăng ký", registration });
+    const mappedRegistration = {
+      ...registration,
+      registeredAt: registration.createdAt,
+    };
+
+    res.json({ message: "Registration approved", registration: mappedRegistration });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi duyệt đăng ký" });
@@ -544,11 +580,16 @@ exports.rejectRegistration = async (req, res) => {
     await createNotification(
       userId,
       "EVENT_APPROVED",
-      `Đơn đăng ký của bạn cho sự kiện "${event.title}" đã bị từ chối`,
+      `Your registration for the event "${event.title}" has been rejected`,
       `/volunteer/dashboard?eventId=${eventId}`
     );
 
-    res.json({ message: "Đã từ chối đăng ký", registration });
+    const mappedRegistration = {
+      ...registration,
+      registeredAt: registration.createdAt,
+    };
+
+    res.json({ message: "Registration rejected", registration: mappedRegistration });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi từ chối đăng ký" });
@@ -617,11 +658,16 @@ exports.markAttended = async (req, res) => {
     await createNotification(
       userId,
       "EVENT_REMINDER",
-      `Bạn đã hoàn thành tham gia sự kiện "${event.title}". Cảm ơn bạn!`,
+      `You have completed participation in the event "${event.title}". Thank you!`,
       `/volunteer/dashboard?eventId=${eventId}`
     );
 
-    res.json({ message: "Đã xác nhận hoàn thành", registration });
+    const mappedRegistration = {
+      ...registration,
+      registeredAt: registration.createdAt,
+    };
+
+    res.json({ message: "Completion confirmed", registration: mappedRegistration });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi khi đánh dấu hoàn thành" });

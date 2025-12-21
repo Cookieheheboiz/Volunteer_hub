@@ -43,20 +43,20 @@ function groupNotifications(notifications: Notification[]): GroupedNotification[
         groupedIds.push(notif.id)
         
         // Lấy tên người đầu tiên từ content
-        const firstPersonMatch = existing.content.match(/^([^đ]+)/)
-        const firstName = firstPersonMatch ? firstPersonMatch[1].trim() : "Ai đó"
+        const firstPersonMatch = existing.content.match(/^([^hcl]+)/)
+        const firstName = firstPersonMatch ? firstPersonMatch[1].trim() : "Someone"
         
         // Cập nhật content
         const count = groupedIds.length - 1
         let newContent = ""
         if (notif.type === "POST_LIKE") {
           newContent = count === 0 
-            ? `${firstName} đã thích bài viết của bạn`
-            : `${firstName} và ${count} người khác đã thích bài viết của bạn`
+            ? `${firstName} liked your post`
+            : `${firstName} and ${count} others liked your post`
         } else {
           newContent = count === 0
-            ? `${firstName} đã bình luận vào bài viết của bạn`
-            : `${firstName} và ${count} người khác đã bình luận vào bài viết của bạn`
+            ? `${firstName} commented on your post`
+            : `${firstName} and ${count} others commented on your post`
         }
         
         grouped.set(groupKey, {

@@ -169,14 +169,14 @@ exports.toggleUserStatus = async (req, res) => {
       await createNotification(
         id,
         "EVENT_APPROVED",
-        "Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ để biết thêm thông tin.",
+        "Your account has been locked by the administrator. Please contact for more information.",
         null
       );
     } else {
       await createNotification(
         id,
         "EVENT_APPROVED",
-        "Tài khoản của bạn đã được mở khóa. Bạn có thể tiếp tục sử dụng hệ thống.",
+        "Your account has been unlocked. You can continue using the system.",
         null
       );
     }
@@ -222,12 +222,12 @@ exports.approveEvent = async (req, res) => {
     await createNotification(
       event.creatorId,
       "EVENT_APPROVED",
-      `Sự kiện "${event.title}" của bạn đã được quản trị viên chấp nhận`,
+      `Your event "${event.title}" has been approved by the administrator`,
       `/manager/dashboard?eventId=${id}`
     );
 
     res.json({
-      message: "Đã duyệt sự kiện",
+      message: "Event approved",
       event: updatedEvent,
     });
   } catch (error) {
@@ -262,12 +262,12 @@ exports.rejectEvent = async (req, res) => {
     await createNotification(
       event.creatorId,
       "EVENT_APPROVED",
-      `Sự kiện "${event.title}" của bạn đã bị quản trị viên từ chối`,
+      `Your event "${event.title}" has been rejected by the administrator`,
       `/manager/dashboard?eventId=${id}`
     );
 
     res.json({
-      message: "Đã từ chối sự kiện",
+      message: "Event rejected",
       event: updatedEvent,
     });
   } catch (error) {

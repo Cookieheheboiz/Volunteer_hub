@@ -45,14 +45,14 @@ function getRelativeTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffMins < 1) return "Vừa xong"
-  if (diffMins < 60) return `${diffMins} phút trước`
-  if (diffHours < 24) return `${diffHours} giờ trước`
-  if (diffDays < 7) return `${diffDays} ngày trước`
-  return date.toLocaleDateString("vi-VN")
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins} minutes ago`
+  if (diffHours < 24) return `${diffHours} hours ago`
+  if (diffDays < 7) return `${diffDays} days ago`
+  return date.toLocaleDateString("en-US")
 }
 
-export function NotificationCenter({ notifications, onDelete, onMarkAllRead, onMarkAsRead }: NotificationCenterProps) {
+export function NotificationCenter({ notifications, onDelete, onMarkAllRead, onMarkAsRead}: NotificationCenterProps) {
   const [open, setOpen] = useState(false)
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -76,16 +76,16 @@ export function NotificationCenter({ notifications, onDelete, onMarkAllRead, onM
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
-          <span className="sr-only">Thông báo</span>
+          <span className="sr-only">Notifications</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <h3 className="font-semibold">Thông báo</h3>
+          <h3 className="font-semibold">Notifications</h3>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={onMarkAllRead}>
               <CheckCheck className="h-3 w-3 mr-1" />
-              Đánh dấu tất cả đã đọc
+              Mark all as read
             </Button>
           )}
         </div>
@@ -93,7 +93,7 @@ export function NotificationCenter({ notifications, onDelete, onMarkAllRead, onM
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Bell className="h-10 w-10 mb-2 opacity-50" />
-              <p className="text-sm">Chưa có thông báo.</p>
+              <p className="text-sm">No notifications yet.</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -127,7 +127,7 @@ export function NotificationCenter({ notifications, onDelete, onMarkAllRead, onM
                     }}
                   >
                     <X className="h-3 w-3" />
-                    <span className="sr-only">Xóa thông báo</span>
+                    <span className="sr-only">Delete notification</span>
                   </Button>
                 </div>
               ))}
