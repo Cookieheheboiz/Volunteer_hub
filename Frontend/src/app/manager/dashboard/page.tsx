@@ -160,14 +160,21 @@ export default function ManagerDashboardPage() {
 
   const handleCreateEvent = async (eventData: any) => {
     try {
+      // Convert local time strings to ISO UTC strings to ensure correct timezone storage
+      const payload = {
+        ...eventData,
+        startTime: new Date(eventData.startTime).toISOString(),
+        endTime: new Date(eventData.endTime).toISOString(),
+      };
+
       if (editingEvent) {
-        await eventApi.updateEvent(editingEvent.id, eventData);
+        await eventApi.updateEvent(editingEvent.id, payload);
         toast({
           title: "Event Updated",
           description: "Event information has been updated.",
         });
       } else {
-        await eventApi.createEvent(eventData);
+        await eventApi.createEvent(payload);
         toast({
           title: "Event Created",
           description: "Event is pending approval.",
