@@ -89,4 +89,12 @@ router.patch(
   eventController.markAttended
 );
 
+// GET /api/events/:id/registrations/export/csv - Export danh sách đăng ký ra CSV
+router.get(
+  "/:id/registrations/export/csv",
+  authMiddleware,
+  checkRole(["EVENT_MANAGER"]),
+  eventController.exportEventRegistrationsCSV
+);
+
 module.exports = router;
