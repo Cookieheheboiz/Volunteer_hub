@@ -14,7 +14,11 @@ const path = require("path");
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:3001", "http://localhost:3000"], // Cho phép frontend
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:3000",
+      "https://volunteer-hub-psi.vercel.app",
+    ], // Cho phép frontend
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -22,7 +26,7 @@ app.use(
 );
 
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const PORT = process.env.PORT || 3000;
 
