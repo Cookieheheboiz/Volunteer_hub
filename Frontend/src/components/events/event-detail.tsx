@@ -198,22 +198,24 @@ export function EventDetail({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("vi-VN", {
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
+    return new Date(dateString).toLocaleTimeString("vi-VN", {
       hour: "numeric",
       minute: "2-digit",
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("vi-VN", {
       weekday: "short",
       month: "short",
       day: "numeric",
