@@ -2,7 +2,6 @@ const prisma = require("../config/prisma");
 const { Parser } = require("json2csv");
 const { createNotification } = require("../utils/notificationHelper");
 
-// ============ PHẦN CỦA MAIN (Dashboard Stats) ============
 // Lấy thống kê tổng quan cho admin dashboard
 exports.getStats = async (req, res) => {
   try {
@@ -201,13 +200,13 @@ exports.approveEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const event = await prisma.event.findUnique({ 
+    const event = await prisma.event.findUnique({
       where: { id },
       include: {
         creator: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
     if (!event) {
       return res.status(404).json({ error: "Sự kiện không tồn tại" });
@@ -241,13 +240,13 @@ exports.rejectEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const event = await prisma.event.findUnique({ 
+    const event = await prisma.event.findUnique({
       where: { id },
       include: {
         creator: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
     if (!event) {
       return res.status(404).json({ error: "Sự kiện không tồn tại" });
@@ -276,13 +275,11 @@ exports.rejectEvent = async (req, res) => {
   }
 };
 
-// ============ EXPORT DỮ LIỆU ============
-
 // Export danh sách sự kiện ra CSV
 exports.exportEventsCSV = async (req, res) => {
   try {
-    const { status } = req.query; // Filter by status if needed
-    
+    const { status } = req.query;
+
     const where = {};
     if (status) where.status = status;
 
@@ -299,15 +296,14 @@ exports.exportEventsCSV = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    // Flatten data for CSV
-    const flattenedEvents = events.map(event => ({
+    const flattenedEvents = events.map((event) => ({
       id: event.id,
       title: event.title,
       description: event.description,
       location: event.location,
       status: event.status,
-      creatorName: event.creator?.name || 'N/A',
-      creatorEmail: event.creator?.email || 'N/A',
+      creatorName: event.creator?.name || "N/A",
+      creatorEmail: event.creator?.email || "N/A",
       startTime: event.startTime,
       endTime: event.endTime,
       maxParticipants: event.maxParticipants,
@@ -316,18 +312,18 @@ exports.exportEventsCSV = async (req, res) => {
     }));
 
     const fields = [
-      { label: 'ID', value: 'id' },
-      { label: 'Title', value: 'title' },
-      { label: 'Description', value: 'description' },
-      { label: 'Location', value: 'location' },
-      { label: 'Status', value: 'status' },
-      { label: 'Creator Name', value: 'creatorName' },
-      { label: 'Creator Email', value: 'creatorEmail' },
-      { label: 'Start Time', value: 'startTime' },
-      { label: 'End Time', value: 'endTime' },
-      { label: 'Max Participants', value: 'maxParticipants' },
-      { label: 'Current Participants', value: 'currentParticipants' },
-      { label: 'Created At', value: 'createdAt' },
+      { label: "ID", value: "id" },
+      { label: "Title", value: "title" },
+      { label: "Description", value: "description" },
+      { label: "Location", value: "location" },
+      { label: "Status", value: "status" },
+      { label: "Creator Name", value: "creatorName" },
+      { label: "Creator Email", value: "creatorEmail" },
+      { label: "Start Time", value: "startTime" },
+      { label: "End Time", value: "endTime" },
+      { label: "Max Participants", value: "maxParticipants" },
+      { label: "Current Participants", value: "currentParticipants" },
+      { label: "Created At", value: "createdAt" },
     ];
 
     const parser = new Parser({ fields });
@@ -345,8 +341,8 @@ exports.exportEventsCSV = async (req, res) => {
 // Export danh sách sự kiện ra JSON
 exports.exportEventsJSON = async (req, res) => {
   try {
-    const { status } = req.query; // Filter by status if needed
-    
+    const { status } = req.query;
+
     const where = {};
     if (status) where.status = status;
 
@@ -392,12 +388,12 @@ exports.exportEventsJSON = async (req, res) => {
 // Export danh sách users ra CSV
 exports.exportUsersCSV = async (req, res) => {
   try {
-    const { role, status } = req.query; // Filter by role and status if needed
-    
+    const { role, status } = req.query;
+
     const where = {};
     if (role) where.role = role;
     if (status) {
-      where.isActive = status === 'ACTIVE';
+      where.isActive = status === "ACTIVE";
     }
 
     const users = await prisma.user.findMany({
@@ -420,27 +416,26 @@ exports.exportUsersCSV = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    // Flatten data for CSV
-    const flattenedUsers = users.map(user => ({
+    const flattenedUsers = users.map((user) => ({
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
-      status: user.isActive ? 'ACTIVE' : 'BANNED',
+      status: user.isActive ? "ACTIVE" : "BANNED",
       createdEvents: user._count?.createdEvents || 0,
       registrations: user._count?.registrations || 0,
       createdAt: user.createdAt,
     }));
 
     const fields = [
-      { label: 'ID', value: 'id' },
-      { label: 'Name', value: 'name' },
-      { label: 'Email', value: 'email' },
-      { label: 'Role', value: 'role' },
-      { label: 'Status', value: 'status' },
-      { label: 'Created Events', value: 'createdEvents' },
-      { label: 'Registrations', value: 'registrations' },
-      { label: 'Created At', value: 'createdAt' },
+      { label: "ID", value: "id" },
+      { label: "Name", value: "name" },
+      { label: "Email", value: "email" },
+      { label: "Role", value: "role" },
+      { label: "Status", value: "status" },
+      { label: "Created Events", value: "createdEvents" },
+      { label: "Registrations", value: "registrations" },
+      { label: "Created At", value: "createdAt" },
     ];
 
     const parser = new Parser({ fields });
@@ -458,12 +453,12 @@ exports.exportUsersCSV = async (req, res) => {
 // Export danh sách users ra JSON
 exports.exportUsersJSON = async (req, res) => {
   try {
-    const { role, status } = req.query; // Filter by role and status if needed
-    
+    const { role, status } = req.query;
+
     const where = {};
     if (role) where.role = role;
     if (status) {
-      where.isActive = status === 'ACTIVE';
+      where.isActive = status === "ACTIVE";
     }
 
     const users = await prisma.user.findMany({
@@ -498,10 +493,9 @@ exports.exportUsersJSON = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    // Map isActive to status for consistency
-    const mappedUsers = users.map(user => ({
+    const mappedUsers = users.map((user) => ({
       ...user,
-      status: user.isActive ? "ACTIVE" : "BANNED"
+      status: user.isActive ? "ACTIVE" : "BANNED",
     }));
 
     res.header("Content-Type", "application/json; charset=utf-8");
